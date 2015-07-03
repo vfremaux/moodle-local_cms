@@ -1,4 +1,4 @@
-<?php // $Id: cmslocallib.php,v 1.13 2008/03/23 09:11:37 julmis Exp $
+<?php
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -28,108 +28,146 @@ defined('MOODLE_INTERNAL') or die('Direct access to this script is forbidden.');
 
 require_once($CFG->dirroot.'/local/cms/lib.php');
 
-/**
-* Print menu selection list.
-*
-* @param int $courseid
-* @return void
-*/
-function cms_print_menus ($courseid = 1) {
-
-    cms_print_newmenulink($courseid);
-    cms_print_allmenus($courseid);
-
-}
-
-/**
-* Print all menus.
-*
-* @uses $CFG
-* @uses $USER
-* @param int $courseid
-* @return void
-*/
-function cms_print_allmenus($courseid = 1) {
-    global $CFG, $USER, $DB;
-    
-    $menus = $DB->get_records('local_cms_navi', array('course' => $courseid));
-
-    if (is_array($menus)) {
-        include_once($CFG->dirroot.'/local/cms/html/printmenus.php');
-    } else {
-        echo '<div align="center">';
-        echo '<p>';
-        echo get_string('nomenus', 'local_cms');
-        echo '</p></div>';
-    }
-}
-
-/**
-* Print Add new link into menu administration page.
-*
-* @uses $USER
-* @param int $courseid
-* @return void
-*/
-function cms_print_newmenulink($courseid = 1) {
-    global $CFG;
-    
-    $straddnew = get_string('addnewmenu','local_cms');
-
-    echo '<div align="center"><p><a href="'.$CFG->wwwroot.'/local/cms/menuadd.php?course='.$courseid.'&amp;';
-    echo 'sesskey='.sesskey().'">'.$straddnew.'</a></p></div>';
-
-}
-
-/**
-* Print pages index page.
-*
-* @uses $CFG
-* @uses $USER
-* @param int $menuid the currently edited menu
-* @param int $courseid the course the visit is originated from
-* @param int $courseid the current context for checking control permissions
-* @return void
-*/
-function cms_print_pages($menu, $courseid, $context) {
+function cms_get_page_data_by_id($courseidfoo, $pageid) {
     global $CFG, $DB;
 
-    // prepare navigation to all menus in same context
-    $menus = $DB->get_records('local_cms_navi', array('course' => $menu->course), 'name');
+    // Fetch pagedata from the database
 
-    include_once($CFG->dirroot.'/local/cms/html/navimenu.php');
-    include_once($CFG->dirroot.'/local/cms/html/pagesindex.php');
+    if (intval($pageid) != $pageid) {
+        return false;
+    }
+
+    $sql = "
+            SELECT
+                p.id,
+                p.body,
+                p.modified,
+                nd.isfp,
+                nd.parentid,
+                nd.naviid,
+                nd.title,
+                nd.pagename,
+                nd.showblocks,
+                n.requirelogin,
+                n.allowguest,
+                n.printdate,
+                n.course
+            FROM
+                {local_cms_pages} p
+            INNER JOIN {local_cms_navi_data} nd ON p.id = nd.pageid
+            LEFT JOIN {local_cms_navi} n ON nd.naviid = n.id
+            WHERE
+                p.id = ?
+    ";
+
+    $pagedata = $DB->get_record_sql($sql, array($pageid));
+    if (empty($pagedata)) {
+        return '<p>'. get_string('nocontent', 'local_cms') .'</p>';
+    }
+    return $pagedata;
 }
 
 /**
-* Print add new page link
-*
-* @uses $USER
-* @param int $menuid
-* @param int $courseid
-* @return void
-*/
-function cms_print_addnewpage ($menuid, $courseid=1) {
-    global $USER, $CFG;
+ * Get complete page from some page name in a menu. This function should deprecate
+ * all previous functions including course format. the name must be unique in 
+ * manu scope and also in a course scope.
+ *
+ * @param int $courseid A course scope.
+ * @param int $naviid A menu id.
+ * @param mixed $pagename Page name or page id.
+ * @return string
+ */
+function cms_get_page_data($courseid = 0, $naviid = 0, $pagename = '') {
+    global $CFG, $DB;
 
-    $menuid = clean_param($menuid, PARAM_INT);
+    $pagename = urldecode($pagename);
 
-    echo '<p><a href="'.$CFG->wwwroot.'/local/cms/pageadd.php?id='.$menuid.'&amp;sesskey='.$sesskey().'&amp;course='.$courseid.'">';
-    echo get_string('addnewpage', 'local_cms');
-    echo '</a></p>';
+    $params = array();
+    if (!empty($pagename)) {
+        $whereclause = "nd.pagename = ?";
+        $params[] = $pagename;
+    } else {
+        $whereclause = "nd.isfp = '1'";
+    }
 
+    $scopeclause = '';
+    if ($naviid) {
+        // Menu scope will superseede course scope.
+        $scopeclause = ' AND nd.naviid = ?';
+        $params[] = $naviid;
+    } elseif ($courseid) {
+        $scopeclause = 'AND n.course = ?';
+        $params[] = $courseid;
+    }
+
+    $sql = "
+        SELECT
+            p.id,
+            p.body,
+            p.modified,
+            nd.isfp,
+            nd.parentid,
+            nd.id as navidataid,
+            nd.naviid as nid,
+            nd.title,
+            nd.pagename,
+            nd.showblocks,
+            n.requirelogin,
+            n.allowguest,
+            n.printdate,
+            n.course
+         FROM
+            {local_cms_pages} p
+        INNER JOIN
+            {local_cms_navi_data} nd
+        ON
+            p.id = nd.pageid
+        LEFT JOIN
+            {local_cms_navi} n
+        ON
+            nd.naviid = n.id
+        WHERE
+            $whereclause
+            $scopeclause
+    ";
+    $pagedata = $DB->get_record_sql($sql, $params);
+    return $pagedata;
 }
 
 /**
-* Get navigation data for page index.
-*
-* @uses $CFG
-* @uses $USER
-* @param int $parentid
-* @param int $menuid
-* @return array
-*/
-function cms_get_navi($parentid, $menuid=1) {
+ * Create navigation string from breadcrumbs array
+ *
+ * @param array $breadcrumbs
+ * @return mixed Returns string or false
+ */
+function cms_navigation_string ($breadcrumbs) {
+    if ( !is_array($breadcrumbs) ) {
+        return false;
+    }
+    $breadcrumbs = array_reverse($breadcrumbs);
+    $navigation = '';
+    $current = 1;
+    $total = count($breadcrumbs);
+    foreach ( $breadcrumbs as $key => $value ) {
+        if ( $current++ == $total ) {
+            $navigation .= ' '. $key;
+        } else {
+            $navigation .= '<a href="'. $value .'">'. s(format_string($key)) .'</a> -> ';
+        }
+    }
+    return $navigation;
+}
+
+/**
+ * Get navigation data for page index.
+ *
+ * @uses $CFG
+ * @uses $USER
+ * @param int $parentid
+ * @param int $menuid
+ * @return array
+ */
+function cms_get_navi($parentid, $menuid = 1) {
     global $CFG, $DB;
 
     $menuid   = intval($menuid);
@@ -156,42 +194,42 @@ function cms_get_navi($parentid, $menuid=1) {
 }
 
 /**
-* Get all possible parents in the same menu.
-* Eliminating own childs
-*
-* @uses $CFG
-* @uses $USER
-* @param int $parentid
-* @param int $menuid
-* @return array
-*/
+ * Get all possible parents in the same menu.
+ * Eliminating own childs
+ *
+ * @uses $CFG
+ * @uses $USER
+ * @param int $parentid
+ * @param int $menuid
+ * @return array
+ */
 function cms_get_possible_parents($menuid, $navidataid) {
     global $CFG, $DB;
-    
-    if($navidataid){
-    
-	    $list = '';
-	    if ($children = cms_get_children_ids($navidataid)){
-	    	$list = implode("','", array_values($children));
-	    }
-	    
-	    return $DB->get_records_select('local_cms_navi_data', " naviid = ? AND id NOT IN ('{$list}') AND id != $navidataid ", array($menuid));
 
-	} else {
+    if ($navidataid) {
 
-	    return $DB->get_records('local_cms_navi_data', array('naviid' => $menuid));
+        $list = '';
+        if ($children = cms_get_children_ids($navidataid)) {
+            $list = implode("','", array_values($children));
+        }
 
-	}
+        return $DB->get_records_select('local_cms_navi_data', " naviid = ? AND id NOT IN ('{$list}') AND id != $navidataid ", array($menuid));
+
+    } else {
+
+        return $DB->get_records('local_cms_navi_data', array('naviid' => $menuid));
+
+    }
 }
 
 /**
-* Get all page data.
-*
-* @uses $CFG
-* @param int $pageid
-* @return object
-*/
-function cms_get_pagedata($pageid) {
+ * Get all page data. DEPRECATED, use cms_get_page_data()
+ *
+ * @uses $CFG
+ * @param int $pageid
+ * @return object
+ */
+function cms_get_page_data_from_id($pageid) {
     global $CFG, $DB;
 
     $pageid = clean_param($pageid, PARAM_INT);
@@ -201,18 +239,24 @@ function cms_get_pagedata($pageid) {
             p.*, 
             n.title, 
             n.showinmenu, 
-            n.id AS nid, 
-            n.naviid, 
-            n.parentid, 
-            n.url, 
-            n.target, 
-            n.pagename, 
-            n.showblocks 
-        FROM 
-            {local_cms_pages} p, 
-            {local_cms_navi_data} n 
-        WHERE 
-            n.pageid = p.id AND 
+            n.id AS navidataid, 
+            n.naviid as nid,
+            n.parentid,
+            n.url,
+            n.target,
+            n.isfp,
+            n.pagename,
+            m.requirelogin,
+            m.allowguest,
+            n.showblocks,
+            m.course
+        FROM
+            {local_cms_pages} p,
+            {local_cms_navi_data} n,
+            {local_cms_navi} m
+        WHERE
+            m.id = n.naviid AND
+            n.pageid = p.id AND
             n.pageid = ?
     ";
 
@@ -224,16 +268,15 @@ function cms_get_pagedata($pageid) {
 }
 
 /**
-* Resets menu order of selected menu.
-*
-* @global object $CFG
-* @staticvar int $count
-* @param int $parentid
-* @param int $menuid
-* @return bool
-*/
+ * Resets menu order of selected menu.
+ *
+ * @global object $CFG
+ * @staticvar int $count
+ * @param int $parentid
+ * @param int $menuid
+ * @return bool
+ */
 function cms_reset_menu_order ($parentid, $menuid) {
-
     global $CFG;
     static $count;
 
@@ -274,10 +317,10 @@ function cms_reset_menu_order ($parentid, $menuid) {
 }
 
 /**
-* This class takes care of page index output almost completely.
-*
-* @package CMS_plugin
-*/
+ * This class takes care of page index output almost completely.
+ *
+ * @package CMS_plugin
+ */
 class cms_pages_menu {
     /**
     * Array container for pages
@@ -377,9 +420,12 @@ class cms_pages_menu {
 
         // Get strings
         $this->strisdefault    = get_string('isdefaultpage', 'local_cms');
-        $this->strsetasdefault = get_string('setdefault'   , 'local_cms');
-        $this->strpublished    = get_string('published'    , 'local_cms');
-        $this->strunpublished  = get_string('unpublished'  , 'local_cms');
+        $this->strsetasdefault = get_string('setdefault', 'local_cms');
+        $this->strpublished    = get_string('published', 'local_cms');
+        $this->strunpublished  = get_string('unpublished', 'local_cms');
+        $this->strmenu  = get_string('showinmenu', 'local_cms');
+        $this->strinmenu  = get_string('inmenu', 'local_cms');
+        $this->strnotinmenu  = get_string('notinmenu', 'local_cms');
 
         // Cache images. Pointless to initialize them in
         // methods every time.
@@ -393,28 +439,35 @@ class cms_pages_menu {
         $this->imgunpub = '<img src="'. $OUTPUT->pix_url('nopublish', 'local_cms').'" alt="' .
                           stripslashes($this->strunpublished) .'" title="' .
                           stripslashes($this->strunpublished) .'" />';
+        $this->imginmenu  = '<img src="'. $OUTPUT->pix_url('inmenu', 'local_cms').'" alt="' .
+                         stripslashes($this->strinmenu) .'" title="' .
+                         stripslashes($this->strinmenu) .'" />';
+        $this->imgnotinmenu = '<img src="'. $OUTPUT->pix_url('notinmenu', 'local_cms').'" alt="' .
+                          stripslashes($this->strnotinmenu) .'" title="' .
+                          stripslashes($this->strnotinmenu) .'" />';
         $this->imgblank = '<img src="'. $OUTPUT->pix_url('blank', 'local_cms').'" width="11" height="11" alt="" />';
 
         $sql  = "
-            SELECT 
-                n.pageid AS id, 
-                n.naviid, 
-                n.pagename, 
-                n.title, 
+            SELECT
+                n.pageid AS id,
+                n.id as navidataid,
+                n.naviid,
+                n.pagename,
+                n.title,
                 n.isfp,
                 n.parentid,
-                n.url, 
+                n.url,
                 n.target,
-                p.publish, 
-                p.created, 
+                p.publish,
+                p.created,
                 p.modified
             FROM 
                 {local_cms_navi_data} n,
-                {local_cms_pages} p 
-            WHERE 
+                {local_cms_pages} p
+            WHERE
                 n.pageid = p.id AND
-                n.naviid = ? 
-            ORDER BY 
+                n.naviid = ?
+            ORDER BY
                 n.sortorder
         ";
 
@@ -432,11 +485,11 @@ class cms_pages_menu {
     }
 
     /**
-    * Check if current page has parent page. For internal use only.
-    * @param int $pageid
-    * @param bool $returnid
-    * @return mixed Returns parent page id if enable or true/false
-    */
+     * Check if current page has parent page. For internal use only.
+     * @param int $pageid
+     * @param bool $returnid
+     * @return mixed Returns parent page id if enable or true/false
+     */
     function __hasParent($pageid, $returnid = FALSE) {
 
         $pageid = intval($pageid);
@@ -456,11 +509,11 @@ class cms_pages_menu {
     }
 
     /**
-    * Check if current page has child page. For internal use only.
-    * @param int $pageid
-    * @param bool $returnid
-    * @return mixed Returns child page id if enable or true/false
-    */
+     * Check if current page has child page. For internal use only.
+     * @param int $pageid
+     * @param bool $returnid
+     * @return mixed Returns child page id if enable or true/false
+     */
     function __hasChildren($pageid, $returnid = FALSE) {
 
         $pageid = intval($pageid);
@@ -478,10 +531,10 @@ class cms_pages_menu {
     }
 
     /**
-    * Check if current page has sibling page. For internal use only.
-    * @param int $parentid
-    * @return bool
-    */
+     * Check if current page has sibling page. For internal use only.
+     * @param int $parentid
+     * @return bool
+     */
     function __hasSibling($parentid) {
 
         $parentid = intval($parentid);
@@ -493,13 +546,12 @@ class cms_pages_menu {
     }
 
     /**
-    * Check if current page is the first page in current level.
-    * @param int $parentid
-    * @param int $pageid
-    * @return bool
-    */
+     * Check if current page is the first page in current level.
+     * @param int $parentid
+     * @param int $pageid
+     * @return bool
+     */
     function __firstAtLevel ( $parentid, $pageid ) {
-
         $pageid = intval($pageid);
         $parentid = intval($parentid);
 
@@ -516,13 +568,12 @@ class cms_pages_menu {
     }
 
     /**
-    * Check if current page is the last page in current level.
-    * @param int $parentid
-    * @param int $pageid
-    * @return bool
-    */
+     * Check if current page is the last page in current level.
+     * @param int $parentid
+     * @param int $pageid
+     * @return bool
+     */
     function __lastAtLevel($parentid, $pageid) {
-
         $pageid = intval($pageid);
         $parentid = intval($parentid);
 
@@ -535,17 +586,16 @@ class cms_pages_menu {
     }
 
     /**
-    * Construct data for table class used in pagesindex page.
-    *
-    * @uses $USER
-    * @staticvar array $output
-    * @staticvar int $count
-    * @staticvar object $prevpage
-    * @param int $parentid
-    * @return array
-    */
-    function get_page_tree_rows($parentid){
-
+     * Construct data for table class used in pagesindex page.
+     *
+     * @uses $USER
+     * @staticvar array $output
+     * @staticvar int $count
+     * @staticvar object $prevpage
+     * @param int $parentid
+     * @return array
+     */
+    function get_page_tree_rows($parentid) {
         static $output, $count, $prevpage;
 
         if ( empty($output) ) {
@@ -555,23 +605,21 @@ class cms_pages_menu {
             $count = 0;
         }
 
-        if ( !empty($this->pages) ) {
+        if (!empty($this->pages)) {
             $count++;
-            foreach ( $this->pages as $p ) {
-                if ( $p->parentid == $parentid ) {
+            foreach ($this->pages as $p) {
+                if ($p->parentid == $parentid) {
                     $row = array();
 
                     $row[] = '<input type="checkbox" name="id" value="'.$p->id .'" />';
 
-                    $hrefup = '<a href="pages.php?sesskey='.sesskey().
-                          '&amp;sort=up&amp;menuid='. $p->naviid . '&amp;pid='. $p->id .
-                          '&amp;mid='. $p->parentid .'&amp;course='. $this->courseid .'">'.
-                          $this->imgup .'</a>';
+                    $params = array('sesskey' => sesskey(), 'sort' => 'up', 'menuid' => $p->naviid, 'pid' => $p->id, 'mid' => $p->parentid, 'course' => $this->courseid);
+                    $url = new moodle_url('/local/cms/pages.php', $params);
+                    $hrefup = '<a href="'.$url.'">'.$this->imgup .'</a>';
 
-                    $hrefdown = '<a href="pages.php?sesskey='.sesskey().
-                            '&amp;sort=down&amp;menuid='. $p->naviid .'&amp;pid='. $p->id .
-                            '&amp;mid='. $p->parentid .'&amp;course='. $this->courseid .'">'.
-                            $this->imgdown .'</a>';
+                    $params = array('sesskey' => sesskey(), 'sort' => 'down', 'menuid' => $p->naviid, 'pid' => $p->id, 'mid' => $p->parentid, 'course' => $this->courseid);
+                    $url = new moodle_url('/local/cms/pages.php', $params);
+                    $hrefdown = '<a href="'.$url.'">'.$this->imgdown .'</a>';
 
                     $hrefleft = '';
                     if ( !empty($prevpage->id) or $this->__hasParent($p->id) ) {
@@ -579,18 +627,16 @@ class cms_pages_menu {
                         if ( empty($moveto) ) {
                             $moveto = '0';
                         }
-                        $hrefleft = '<a href="pages.php?sesskey='.sesskey().
-                                    '&amp;move='. $moveto .'&amp;pid='. $p->id .
-                                    '&amp;menuid='. $p->naviid .'&amp;course='.
-                                    $this->courseid .'" alt="">'. $this->imgleft .'</a>';
+                        $params = array('sesskey' => sesskey(), 'move' => $moveto, 'pid' => $p->id, 'menuid' => $p->naviid, 'course' => $this->courseid);
+                        $url = new moodle_url('/local/cms/pages.php', $params);
+                        $hrefleft = '<a href="'.$url.'" alt="">'. $this->imgleft .'</a>';
                     }
 
                     $hrefright = '';
                     if ( !empty($prevpage->id) ) {
-                        $hrefright  = '<a href="pages.php?sesskey='.sesskey().
-                                      '&amp;move='. $prevpage->id .'&amp;pid='. $p->id .
-                                      '&amp;menuid='. $p->naviid .'&amp;course='.
-                                      $this->courseid .'" alt="">'. $this->imgright .'</a>';
+                        $params = array('sesskey' => sesskey(), 'move' => $prevpage->id, 'pid' => $p->id, 'menuid' => $p->naviid, 'course' => $this->courseid);
+                        $url = new moodle_url('/local/cms/pages.php', $params);
+                        $hrefright  = '<a href="'.$url.'" alt="">'. $this->imgright .'</a>';
                     }
 
                     $moverow = '<table border="0" cellpadding="2"><tr>';
@@ -620,13 +666,8 @@ class cms_pages_menu {
                     $row[] = $moverow .'</tr></table>';
 
                     $pageurl = '';
-                    if ( !empty($this->siteid) ) {
-/*                        $pageurl = ($this->courseid > $this->siteid) ?
-                                   $this->wwwroot .'/course/view.php?id='. $this->courseid .
-                                   '&amp;pid='. $this->__get_path($p->id) :
-                                   $this->wwwroot .'/index.php?pid='. $this->__get_path($p->id);
-*/
-                        $pageurl = $this->wwwroot .'/index.php?pid='. $p->id;
+                    if (!empty($this->siteid)) {
+                        $pageurl = new moodle_url('/local/cms/view.php', array('pid' => $p->id));
                     }
 
                     // If link is a direct url to resource or webpage
@@ -639,29 +680,44 @@ class cms_pages_menu {
                     $pagetitle .= !empty($p->isfp) ? '<strong>'. $p->title .'</strong>' : $p->title;
                     $row[] = $pagetitle;
 
+                    $url = new moodle_url('/local/cms/pages.php', array('course' => $this->courseid, 'sesskey' => sesskey(), 'setfp' => $p->id));
                     $default = !empty($p->isfp) ? $this->strisdefault :
                                ((!empty($p->publish) && empty($p->parentid)) ?
-                               '<a href="pages.php?course='. $this->courseid .'&amp;sesskey='.sesskey().
-                               '&amp;setfp='. $p->id .'">'. $this->strsetasdefault.'</a>' : '');
+                               '<a href="'.$url.'">'. $this->strsetasdefault.'</a>' : '');
                     $row[] = $default;
 
-                    $publishurl = '<a href="pages.php?sesskey='.sesskey().
-                                  '&amp;pid='. $p->id .'&amp;menuid='. $p->naviid .
-                                  '&amp;course='. $this->courseid;
-                    $publish = !empty($p->publish) ? $publishurl .'&amp;publish=no">'. $this->imgpub .'</a>'
-                                                   : $publishurl .'&amp;publish=yes">'. $this->imgunpub .'</a>';
-                    $row[] = $publish;
+                    $params = array('course' => $this->courseid, 'sesskey' => sesskey(), 'pid' => $p->id, 'menuid' => $p->naviid);
+                    $url = new moodle_url('/local/cms/pages.php', $params);
+
+                    if (empty($p->publish)) {
+                        $url->param('publish', 'yes');
+                        $publishlink = '<a href="'.$url.'">'. $this->imgunpub .'</a>';
+                    } else {
+                        $url->param('publish', 'no');
+                        $publishlink = '<a href="'.$url.'">'. $this->imgpub .'</a>';
+                    }
+                    $row[] = $publishlink;
+
+                    $url = new moodle_url('/local/cms/pages.php', $params);
+                    if (empty($p->showinmenu)) {
+                        $url->param('showinmenu', 'yes');
+                        $menulink = '<a href="'.$url.'">'. $this->imgnotinmenu .'</a>';
+                    } else {
+                        $url->param('showinmenu', 'no');
+                        $menulink = '<a href="'.$url.'">'. $this->imginmenu .'</a>';
+                    }
+                    $row[] = $menulink;
 
                     // Get version information.
                     $version = cms_get_page_version($p->id);
-                    $historylink = '<a href="pagehistory.php?sesskey='.sesskey().'&amp;course='.
-                                   $this->courseid .'&amp;menuid='. $p->naviid .'&amp;pageid='. $p->id .
-                                   '">' . s($version) .'</a>';
+                    $params = array('sesskey' => sesskey(), 'course' => $this->courseid, 'menuid' => $p->naviid, 'pageid' => $p->id);
+                    $url = new moodle_url('/local/cms/pagehistory.php', $params);
+                    $historylink = '<a href="'.$url.'">' . s($version) .'</a>';
                     $row[] = $historylink; //s($version);
                     $row[] = userdate($p->modified, "%x %X");
 
                     array_push($output, $row);
-                    $this->get_page_tree_rows ($p->id);
+                    $this->get_page_tree_rows($p->navidataid);
                     $prevpage = $p;
                 }
             }
@@ -672,10 +728,10 @@ class cms_pages_menu {
     }
 
     /**
-    * Create path string from page ids like 2,3,4
-    * @param int $pageid
-    * @return string
-    */
+     * Create path string from page ids like 2,3,4
+     * @param int $pageid
+     * @return string
+     */
     function __get_path($pageid) {
 
         $pagearray = array();
@@ -688,23 +744,23 @@ class cms_pages_menu {
 }
 
 /**
-* Get child page ids of selected page.
-*
-* @param int $parentid
-* @return array An array of ids.
-*/
+ * Get child page ids of selected page.
+ *
+ * @param int $parentid
+ * @return array An array of ids.
+ */
 function cms_get_children_ids($parentid) {
-	global $DB;
+    global $DB;
     static $childrenids;
 
     $parentid = intval($parentid);
 
-    if ( empty($childrenids) ) {
+    if (empty($childrenids)) {
         $childrenids = array();
     }
 
-    if ( $children = $DB->get_records('local_cms_navi_data', array('parentid' =>  $parentid)) ) {
-        foreach ( $children as $child ) {
+    if ($children = $DB->get_records('local_cms_navi_data', array('parentid' =>  $parentid))) {
+        foreach ($children as $child) {
             array_push($childrenids, intval($child->pageid));
             cms_get_children_ids($child->pageid);
         }
@@ -730,25 +786,25 @@ function include_webfx_scripts () {
 }
 
 /**
-* Get version information for selected page. Information
-* can be a single string or an object.
-*
-* @uses $CFG, $DB
-* @param int $pageid
-* @param bool $object Return data as a string or object.
-* @return mixed Returns true/false or an object
-*/
+ * Get version information for selected page. Information
+ * can be a single string or an object.
+ *
+ * @uses $CFG, $DB
+ * @param int $pageid
+ * @param bool $object Return data as a string or object.
+ * @return mixed Returns true/false or an object
+ */
 function cms_get_page_version ($pageid) {
     global $CFG, $DB;
 
     $sql = "
-        SELECT 
+        SELECT
             MAX(version)
         FROM 
             {local_cms_pages_history}
-        WHERE 
+        WHERE
             pageid = ?
-        ORDER BY 
+        ORDER BY
             id DESC
     ";
 
@@ -762,32 +818,32 @@ function cms_get_page_version ($pageid) {
 }
 
 /**
-* Reorder pages
-* @uses $CFG, $DB
-* @param int $id Page id.
-* @param int $parent Parent id.
-* @param int $menuid Menu id.
-* @param string $direction.
-* @return bool
-*/
+ * Reorder pages
+ * @uses $CFG, $DB
+ * @param int $id Page id.
+ * @param int $parent Parent id.
+ * @param int $menuid Menu id.
+ * @param string $direction.
+ * @return bool
+ */
 function cms_reorder($id, $parent, $menuid, $direction) {
     global $CFG, $DB;
 
     $sql  = "
-        SELECT 
-            id, 
-            pageid, 
-            parentid 
-        FROM 
+        SELECT
+            id,
+            pageid,
+            parentid
+        FROM
             {local_cms_navi_data}
-        WHERE 
-            parentid = ? AND 
+        WHERE
+            parentid = ? AND
             naviid = ?
-        ORDER BY 
+        ORDER BY
             sortorder
     ";
 
-    if (! ($results = $DB->get_records_sql($sql, array($parent, $menuid))) ) {
+    if (!($results = $DB->get_records_sql($sql, array($parent, $menuid)))) {
         return false;
     }
 
@@ -850,19 +906,74 @@ function cms_pagename_exists ($pagename, $courseid) {
     global $CFG, $DB;
 
     $sql = "
-        SELECT 
-            nd.id, 
+        SELECT
+            nd.id,
             nd.pagename
         FROM
             {local_cms_navi_data} nd
         LEFT JOIN
             {local_cms_navi} c
-        ON 
+        ON
             nd.naviid = c.id
-        WHERE 
-            nd.pagename = ? AND 
+        WHERE
+            nd.pagename = ? AND
             c.course = ?
     ";
     return $DB->record_exists_sql($sql, array($pagename, $courseid));
 }
 
+function local_cms_add_nav($pagedata) {
+    global $PAGE, $DB;
+
+    $thisid = $pagedata->id;
+
+    $pagedatas[] = $pagedata;
+    while ($pagedata->parentid) {
+        $pagedata = $DB->get_record('local_cms_navi_data', array('id' => $pagedata->parentid));
+        $pagedatas[] = $pagedata;
+    }
+
+    if (!empty($pagedatas)) {
+        $pagedatasrev = array_reverse($pagedatas);
+
+        foreach ($pagedatasrev as $pagedata) {
+            if ($thisid == $pagedata->id) {
+                $PAGE->navbar->add($pagedata->title);
+            } else {
+                $PAGE->navbar->add($pagedata->title, new moodle_url('/local/cms/view.php', array('pid' => $pagedata->id)));
+            }
+        }
+    }
+}
+
+function cms_get_visible_pages($menuid) {
+    global $DB;
+
+    $sql = "
+        SELECT
+            nd.pageid,
+            nd.parentid,
+            nd.title,
+            nd.isfp,
+            nd.pagename,
+            nd.url,
+            nd.target,
+            p.publish,
+            n.requirelogin,
+            n.course
+        FROM
+            {local_cms_navi_data} nd,
+            {local_cms_pages} p,
+            {local_cms_navi} n
+        WHERE
+            nd.pageid = p.id AND
+            p.publish = 1 AND
+            nd.naviid = n.id AND
+            (n.id = ?) AND
+            nd.showinmenu = '1'
+        ORDER BY
+            sortorder
+    ";
+    $pages = $DB->get_records_sql($sql, array($menuid));
+    return $pages;
+}

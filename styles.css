@@ -1,5 +1,10 @@
 #cmsPages td.cell.c1,
 #cmsPages td.cell.c1 table td {
-	padding:0px;	
-	padding-top:6px;	
+    padding:0px;
+    padding-top:6px;
+}
+
+.local-cms-not-exists {
+    opacity:0.5;
+    -moz-opacity:0.5;
 }

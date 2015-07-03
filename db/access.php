@@ -6,7 +6,7 @@ $capabilities = array(
 
     'local/cms:manageview' => array(
         'captype' => 'read',
-        'contextlevel' => CONTEXT_SYSTEM,
+        'contextlevel' => CONTEXT_COURSE,
         'archetypes' => array(
             'guest' => CAP_PROHIBIT,
             'editingteacher' => CAP_ALLOW,
@@ -16,7 +16,7 @@ $capabilities = array(
 
     'local/cms:createmenu' => array(
         'captype' => 'write',
-        'contextlevel' => CONTEXT_SYSTEM,
+        'contextlevel' => CONTEXT_COURSE,
         'archetypes' => array(
             'guest' => CAP_PROHIBIT,
             'editingteacher' => CAP_ALLOW,
@@ -26,7 +26,7 @@ $capabilities = array(
 
     'local/cms:editmenu' => array(
         'captype' => 'write',
-        'contextlevel' => CONTEXT_SYSTEM,
+        'contextlevel' => CONTEXT_COURSE,
         'archetypes' => array(
             'guest' => CAP_PROHIBIT,
             'editingteacher' => CAP_ALLOW,
@@ -36,7 +36,7 @@ $capabilities = array(
 
     'local/cms:deletemenu' => array(
         'captype' => 'write',
-        'contextlevel' => CONTEXT_SYSTEM,
+        'contextlevel' => CONTEXT_COURSE,
         'archetypes' => array(
             'guest' => CAP_PROHIBIT,
             'editingteacher' => CAP_ALLOW,
@@ -46,7 +46,7 @@ $capabilities = array(
 
     'local/cms:createpage' => array(
         'captype' => 'write',
-        'contextlevel' => CONTEXT_SYSTEM,
+        'contextlevel' => CONTEXT_COURSE,
         'archetypes' => array(
             'guest' => CAP_PROHIBIT,
             'editingteacher' => CAP_ALLOW,
@@ -56,7 +56,7 @@ $capabilities = array(
 
     'local/cms:editpage' => array(
         'captype' => 'write',
-        'contextlevel' => CONTEXT_SYSTEM,
+        'contextlevel' => CONTEXT_COURSE,
         'archetypes' => array(
             'guest' => CAP_PROHIBIT,
             'editingteacher' => CAP_ALLOW,
@@ -66,7 +66,7 @@ $capabilities = array(
 
     'local/cms:deletepage' => array(
         'captype' => 'write',
-        'contextlevel' => CONTEXT_SYSTEM,
+        'contextlevel' => CONTEXT_COURSE,
         'archetypes' => array(
             'guest' => CAP_PROHIBIT,
             'editingteacher' => CAP_ALLOW,
@@ -76,7 +76,7 @@ $capabilities = array(
 
     'local/cms:publishpage' => array(
         'captype' => 'write',
-        'contextlevel' => CONTEXT_SYSTEM,
+        'contextlevel' => CONTEXT_COURSE,
         'archetypes' => array(
             'guest' => CAP_PROHIBIT,
             'editingteacher' => CAP_ALLOW,
@@ -86,7 +86,7 @@ $capabilities = array(
 
     'local/cms:movepage' => array(
         'captype' => 'write',
-        'contextlevel' => CONTEXT_SYSTEM,
+        'contextlevel' => CONTEXT_COURSE,
         'archetypes' => array(
             'guest' => CAP_PROHIBIT,
             'editingteacher' => CAP_ALLOW,
@@ -96,7 +96,7 @@ $capabilities = array(
 
     'local/cms:manageblocks' => array(
         'captype' => 'write',
-        'contextlevel' => CONTEXT_SYSTEM,
+        'contextlevel' => CONTEXT_COURSE,
         'archetypes' => array(
             'manager' => CAP_ALLOW
         )

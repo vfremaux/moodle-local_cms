@@ -1,8 +1,8 @@
 <?php
 
 $plugin->component = 'local_cms';
-$plugin->version  = 2014031000;   // The (date) version of this plugin
-$plugin->requires = 2011120500;   // Requires this Moodle version
-$plugin->maturity = MATURITY_BETA;
-$plugin->release = '2.4.0 (Build 2014031000)';
+$plugin->version  = 2015052100;   // The (date) version of this plugin
+$plugin->requires = 2013040500;   // Requires this Moodle version
+$plugin->maturity = MATURITY_RC;
+$plugin->release = '2.7.0 (Build 2015052100)';
 $plugin->dependencies = array('block_cms_navigation' => '2014021500');

@@ -1,5 +1,4 @@
-<?php // $Id: menuadd.php,v 1.2 2008/03/23 09:11:37 julmis Exp $
-
+<?php
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -25,85 +24,86 @@
  * @version: reviewed by MyLearningFactory (valery.fremaux@gmail.com)
  */
 
-    require_once("../../config.php");
-    require_once($CFG->dirroot.'/local/cms/forms/editmenu_form.php');
+require('../../config.php');
+require_once($CFG->dirroot.'/local/cms/forms/editmenu_form.php');
+require_once($CFG->dirroot.'/local/cms/lib.php');
 
-    $courseid = optional_param('course', SITEID, PARAM_INT);
+$courseid = optional_param('course', SITEID, PARAM_INT);
 
+confirm_sesskey();
+
+if (!$course = $DB->get_record('course', array('id' => $courseid)) ) {
+    print_error('coursemisconf');
+}
+
+// Define context.
+
+if ($courseid == SITEID) {
+    $context = context_system::instance();
     require_login();
+} else {
+    $context = context_course::instance($course->id);
+    require_course_login($course->id, true);
+}
 
-    confirm_sesskey();
+require_capability('local/cms:createmenu', $context);
 
-    if ( !$course = $DB->get_record('course', array('id' => $courseid)) ) {
-        print_error('coursemisconf');
+$stradministration = get_string('administration');
+$straddnew = get_string('addnewmenu', 'local_cms');
+$strcms = get_string('cms', 'local_cms');
+$strmenus = get_string('menus', 'local_cms');
+
+$url = new moodle_url('/local/cms/menuadd.php', array('course' => $courseid));
+$PAGE->set_url($url);
+$PAGE->set_pagelayout('admin');
+$PAGE->navbar->add($strcms.' '.$stradministration, new moodle_url('/local/cms/index.php', array('course' => $course->id, 'sesskey' => sesskey())));
+$PAGE->navbar->add($straddnew);
+$PAGE->set_context($context);
+$PAGE->set_title($straddnew);
+$PAGE->set_heading($straddnew);
+
+$menuform = new Edit_Menu_form();
+
+if ($menu = $menuform->get_data() ) {
+
+    $menu->id   = NULL;
+    $menu->name = trim($menu->name);
+    $menu->course = $courseid;
+    $menu->created = time();
+    $menu->modified = time();
+    $menu->intro = $menu->intro;
+
+    if (!$rs = $DB->insert_record('local_cms_navi', $menu)) {
+        print_error("Couldn't create new menu!");
     }
 
-    include_once($CFG->dirroot.'/local/cms/lib.php');
+    $message = get_string('menuadded', 'local_cms');
+    redirect(new moodle_url('/local/cms/menus.php', array('course' => $courseid, 'sesskey' => sesskey())), $message);
+}
 
-    /// Define context
-    if ($courseid == SITEID) {        
-    	$context = context_system::instance();
-    } else {
-    	$context = context_course::instance($course->id);
-    }
+// Start printing page.
 
-    require_capability('local/cms:createmenu', $context);
+echo $OUTPUT->header();
 
-    $stradministration = get_string('administration');
-    $straddnew         = get_string('addnewmenu','local_cms');
-    $strcms            = get_string('cms','local_cms');
-    $strmenus          = get_string('menus','local_cms');
+echo $OUTPUT->box_start();
+echo $OUTPUT->heading($straddnew);
 
-	$url = $CFG->wwwroot.'/local/cms/menuadd.php?course='.$courseid;
-    $PAGE->set_url($url);
-    $PAGE->set_pagelayout('admin');
-    $PAGE->navbar->add($strcms.' '.$stradministration, $CFG->wwwroot.'/local/cms/index.php?course='.$course->id.'&amp;sesskey='.sesskey());
-    $PAGE->navbar->add($straddnew);
-    $PAGE->set_context($context);
-    $PAGE->set_title($straddnew);
-    $PAGE->set_heading($straddnew);
-    
-    $menuform = new Edit_Menu_form();
-    
-    if ($menu = $menuform->get_data() ) {
+// Print form to add new menu.
 
-        $menu->id   = NULL;
-        $menu->name = trim($menu->name);
+if (empty($form)) {
+    $form = new StdClass;
+    $form->name  = '';
+    $form->intro = '';
+    $form->course = $courseid;
+    $form->allowguest   = 0;
+    $form->requirelogin = 0;
+    $form->printdate = 1;
+}
 
-        $menu->created = time();
-        $menu->modified = time();
-        
-        $menu->intro = $menu->intro;
+$menuform->set_data($form);
+$menuform->display();
 
-        if (!$rs = $DB->insert_record('local_cms_navi', $menu)) {
-            print_error("Couldn't create new menu!");
-        }
+// include_once('html/editmenu.php');
 
-        $message = get_string('menuadded', 'local_cms');
-        redirect($CFG->wwwroot.'/local/cms/menus.php?course='.$courseid.'&amp;sesskey='.sesskey(), $message);
-    }
-
-    echo $OUTPUT->header();
-
-
-    echo $OUTPUT->box_start();
-    echo $OUTPUT->heading($straddnew);
-    
-    // Print form to add new menu
-
-    if ( empty($form) ) {
-    	$form = new StdClass;
-        $form->name  = '';
-        $form->intro = '';
-        $form->allowguest   = 0;
-        $form->requirelogin = 0;
-        $form->printdate = 1;
-    }
-
-    $menuform->set_data($form);
-    $menuform->display();
-
-    // include_once('html/editmenu.php');
-
-    echo $OUTPUT->box_end();
-    echo $OUTPUT->footer();
+echo $OUTPUT->box_end();
+echo $OUTPUT->footer();

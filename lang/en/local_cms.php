@@ -30,6 +30,8 @@ $string['deletepage'] = 'Delete page';
 $string['diff'] = 'Diff';
 $string['editmenu'] = 'Edit menu';
 $string['editpage'] = 'Edit page';
+$string['errorcreatepage'] = 'Couldn\'t create new page!';
+$string['errorpagemenulink'] = 'Error while linking page to menu! Page has been removed.';
 $string['errorbadpage'] = 'Error retrieving CMS page!';
 $string['fetchback'] = 'Fetch-back';
 $string['frontpagecms'] = 'CMS content';
@@ -41,6 +43,8 @@ $string['linkto'] = 'Link to ...';
 $string['managemenus'] = 'Manage menus';
 $string['managepages'] = 'Manage pages';
 $string['menu'] = 'Menu';
+$string['inmenu'] = 'Visible in navigation block';
+$string['notinmenu'] = 'Not visible in navigation block';
 $string['menuadded'] = 'New menu added';
 $string['menudeleted'] = 'Menu deleted!';
 $string['menudeletesure'] = 'You\'re about to <strong>delete</strong> menu <strong>{$a}</strong>!<br />Do you wish to continue?';
@@ -96,6 +100,8 @@ $string['viewpages'] = 'View pages';
 $string['unknownauthor'] = 'Unkown author';
 $string['history'] = 'Page History';
 $string['pagediff'] = 'Version diff';
+
+$string['cms_help'] = 'CMS builds menus in which you build a set of pages. Blocks can be added in course content that attaches one of the available menus.';
 
 $string['pagedeletesure'] = 'You\'re about to <strong>delete</strong> page <strong>{$a}</strong>!<br />
 NOTE! All child pages of <em>{$a}</em><br /> (if any exists) will also be deleted!<br /><br />

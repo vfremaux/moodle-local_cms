@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -25,108 +24,108 @@
  * @version: reviewed by MyLearningFactory (valery.fremaux@gmail.com)
  */
 
-    require_once("../../config.php");
-    include_once($CFG->dirroot.'/local/cms/locallib.php');
-    include_once($CFG->dirroot.'/local/cms/forms/deletepage_form.php');
+require('../../config.php');
+require_once($CFG->dirroot.'/local/cms/locallib.php');
+require_once($CFG->dirroot.'/local/cms/forms/deletepage_form.php');
 
-    $id   = required_param('id', PARAM_INT); // page id
-    $courseid = optional_param('course', SITEID, PARAM_INT);
+$id = required_param('id', PARAM_INT); // page id
+$courseid = optional_param('course', SITEID, PARAM_INT);
 
-    require_login();
+require_login();
 
-    confirm_sesskey();
+confirm_sesskey();
 
-    if ( !$course = $DB->get_record('course', array('id' => $courseid)) ) {
-        print_error('coursemisconf');
-    }
-    
-    $formdata = cms_get_pagedata($id);
+if (!$course = $DB->get_record('course', array('id' => $courseid))) {
+    print_error('coursemisconf');
+}
 
-    /// Define context
-    if ($courseid == SITEID ) {
-	    $context = context_system::instance();
-    } else {
-	    $context = context_course::instance($course->id);
-    }
+$formdata = cms_get_page_data_from_id($id);
 
-    require_capability('local/cms:deletepage', $context);
+// Define context.
 
-    $stradministration = get_string('administration');
-    $strcms            = get_string('cms', 'local_cms');
-    $strpages          = get_string('pages', 'local_cms');
-    $strdelete         = get_string('deletepage', 'local_cms');
+if ($courseid == SITEID ) {
+    $context = context_system::instance();
+} else {
+    $context = context_course::instance($course->id);
+}
 
-	$url = $CFG->wwwroot.'/local/cms/pagedelete.php?course='.$courseid;
-    $PAGE->set_url($url);
-    $PAGE->set_pagelayout('admin');
-    $PAGE->navbar->add($strcms.' '.$stradministration, $CFG->wwwroot.'/local/cms/index.php?course='.$course->id.'&amp;sesskey='.sesskey());
-    $PAGE->navbar->add($strdelete);
-    $PAGE->set_context($context);
-    $PAGE->set_title($strdelete);
-    $PAGE->set_heading($strdelete);
-    
-    $deleteform = new Delete_form($url, array('pagetitle' => $formdata->title));
+require_capability('local/cms:deletepage', $context);
 
-    if ($deleteform->is_cancelled()) {
-        redirect($CFG->wwwroot.'/local/cms/pages.php?course='.$course->id.'&amp;menuid='.$formdata->naviid.'&amp;sesskey='.sesskey());
-    }
+$stradministration = get_string('administration');
+$strcms = get_string('cms', 'local_cms');
+$strpages = get_string('pages', 'local_cms');
+$strdelete = get_string('deletepage', 'local_cms');
 
-    if ($data = $deleteform->get_data()) {
+$url = new moodle_url('/local/cms/pagedelete.php', array('course' => $courseid));
+$PAGE->set_url($url);
+$PAGE->set_pagelayout('admin');
+$PAGE->navbar->add($strcms.' '.$stradministration, new moodle_url('/local/cms/index.php', array('course' => $course->id, 'sesskey' => sesskey())));
+$PAGE->navbar->add($strdelete);
+$PAGE->set_context($context);
+$PAGE->set_title($strdelete);
+$PAGE->set_heading($strdelete);
 
-        // Get page data to see if this user can delete this page.
-        if (! $navidata = $DB->get_record('local_cms_navi_data', array('pageid' => $data->id)) ) {
-            redirect($CFG->wwwroot.'/local/cms/pages.php?course='.$course->id.'&amp;menuid='.$data->naviid.'&amp;sesskey='.sesskey(),
-                     "Could not get navidata! You cant delete this page!", 2);
-        }
+$deleteform = new Delete_form($url, array('pagetitle' => $formdata->title));
 
-        if (! $navi = $DB->get_record('local_cms_navi', array('id' => $navidata->naviid)) ) {
-            redirect($CFG->wwwroot.'/local/cms/pages.php?course='.$course->id.'&amp;menuid='.$data->naviid.'&amp;sesskey='.sesskey(),
-                     "Could not get navi and course id's! You cant delete this page!", 2);
-        }
+if ($deleteform->is_cancelled()) {
+    redirect(new moodle_url('/local/cms/pages.php', array('course'=> $course->id, 'menuid' => $formdata->naviid, 'sesskey' => sesskey())));
+}
 
-        if ( intval($navi->course) !== intval($course->id) ) {
-            print_error("You have no rights to delete page $navidata->title ", $CFG->wwwroot);
-        }
+if ($data = $deleteform->get_data()) {
 
-        // Delete child pages first if any.
-        $childpages = cms_get_children_ids($data->id);
-        if ( !empty($childpages) ) {
-            foreach ($childpages as $childpage) {
-                $DB->delete_records('local_cms_pages', array('id' => $childpage));
-                $DB->delete_records('local_cms_navi_data', array('pageid' => $childpage));
-            }
-        }
-
-        // Delete page first
-        if (!$DB->delete_records('local_cms_pages', array('id' => $data->id))) {
-            print_error("Could not delete page!");
-        }
-
-        // Delete navidata
-        if (!$DB->delete_records('local_cms_navi_data', array('id' => $navidata->id))) {
-            print_error("Could not delete navigation data!");
-        }
-
-        // Delete page history.
-        if (!$DB->delete_records('local_cms_pages_history', array('pageid' => $data->id)) ) {
-            print_error("Could not delete page history!");
-        }
-
-        $message = get_string('pagedeleted', 'local_cms');
-        redirect($CFG->wwwroot.'/local/cms/pages.php?course='.$course->id.'&amp;menuid='.$data->naviid.'&amp;sesskey='.sesskey(), $message);
-
+    // Get page data to see if this user can delete this page.
+    if (!$navidata = $DB->get_record('local_cms_navi_data', array('pageid' => $data->id))) {
+        redirect(new moodle_url('/local/cms/pages.php', array('course' => $course->id, 'menuid' => $data->naviid, 'sesskey' => sesskey())),
+                 "Could not get navidata! You cant delete this page!", 2);
     }
 
-    echo $OUTPUT->header();
-    
-    echo $OUTPUT->box_start();
-    echo $OUTPUT->heading($stradministration);
+    if (!$navi = $DB->get_record('local_cms_navi', array('id' => $navidata->naviid))) {
+        redirect(new moodle_url('/local/cms/pages.php', array('course' => $course->id, 'menuid' => $data->naviid, 'sesskey' => sesskey())),
+                 "Could not get navi and course id's! You cant delete this page!", 2);
+    }
 
-    $deletemessage = get_string('pagedeletesure', 'local_cms', $formdata->title);
+    if (intval($navi->course) !== intval($course->id)) {
+        print_error("You have no rights to delete page $navidata->title ", $CFG->wwwroot);
+    }
 
-    // include_once('html/delete.php');
-    $deleteform->set_data($formdata);
-    $deleteform->display();
+    // Delete child pages first if any.
+    $childpages = cms_get_children_ids($data->id);
+    if (!empty($childpages)) {
+        foreach ($childpages as $childpage) {
+            $DB->delete_records('local_cms_pages', array('id' => $childpage));
+            $DB->delete_records('local_cms_navi_data', array('pageid' => $childpage));
+        }
+    }
 
-    echo $OUTPUT->box_end();
-    echo $OUTPUT->footer();
+    // Delete page first
+    if (!$DB->delete_records('local_cms_pages', array('id' => $data->id))) {
+        print_error("Could not delete page!");
+    }
+
+    // Delete navidata
+    if (!$DB->delete_records('local_cms_navi_data', array('id' => $navidata->id))) {
+        print_error("Could not delete navigation data!");
+    }
+
+    // Delete page history.
+    if (!$DB->delete_records('local_cms_pages_history', array('pageid' => $data->id)) ) {
+        print_error("Could not delete page history!");
+    }
+
+    $message = get_string('pagedeleted', 'local_cms');
+    redirect(new moodle_url('/local/cms/pages.php', array('course' => $course->id, 'menuid' => $data->naviid, 'sesskey' => sesskey())), $message);
+}
+
+echo $OUTPUT->header();
+
+echo $OUTPUT->box_start();
+echo $OUTPUT->heading($stradministration);
+
+$deletemessage = get_string('pagedeletesure', 'local_cms', $formdata->title);
+
+// include_once('html/delete.php');
+$deleteform->set_data($formdata);
+$deleteform->display();
+
+echo $OUTPUT->box_end();
+echo $OUTPUT->footer();

@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -25,40 +24,40 @@
  * @version: reviewed by MyLearningFactory (valery.fremaux@gmail.com)
  */
 
-    require('../../config.php');
-    require($CFG->dirroot.'/local/cms/locallib.php');
+require('../../config.php');
+require($CFG->dirroot.'/local/cms/locallib.php');
 
-    $pageid   = required_param('pageid', PARAM_INT);
-    $courseid = required_param('course', PARAM_INT);
+$pageid   = required_param('pageid', PARAM_INT);
+$courseid = required_param('course', PARAM_INT);
 
-    if ( !$course = $DB->get_record('course', array('id' => $courseid)) ) {
-        print_error('coursemisconf');
-    }
+if (!$course = $DB->get_record('course', array('id' => $courseid)) ) {
+    print_error('coursemisconf');
+}
 
-	// You need being enrolled in that course (or being superuser)
-    require_login($course->id);
+// You need being enrolled in that course (or being superuser).
+require_login($course->id);
 
-    $context = context_course::instance($courseid);
-    require_capability('local/cms:editpage', $context);
+$context = context_course::instance($courseid);
+require_capability('local/cms:editpage', $context);
 
-/// setup page
+// setup page.
 
-	$historystr = get_string('history', 'local_cms');
+$historystr = get_string('history', 'local_cms');
 
-	$url = $CFG->wwwroot.'/local/cms/historyview.php?pageid='.$pageid.'&course='.$courseid;
-	$PAGE->set_url($url);
-	$PAGE->set_context($context);
-	$PAGE->set_heading($historystr);
-	$PAGE->set_title($historystr);
+$url = new moodle_url('/local/cms/historyview.php', array('pageid' => $pageid, 'course' => $courseid));
+$PAGE->set_url($url);
+$PAGE->set_context($context);
+$PAGE->set_heading($historystr);
+$PAGE->set_title($historystr);
 
-/// Print page
+// Print page.
 
-    echo $OUTPUT->header();
+echo $OUTPUT->header();
 
-    if ( $pagedata = $DB->get_record('local_cms_pages_history', array('id' => $pageid)) ) {
-        $options = new stdClass;
-        $options->noclean = true;
-        echo format_text($pagedata->content, FORMAT_HTML, $options);
-    }
+if ( $pagedata = $DB->get_record('local_cms_pages_history', array('id' => $pageid)) ) {
+    $options = new stdClass;
+    $options->noclean = true;
+    echo format_text($pagedata->content, FORMAT_HTML, $options);
+}
 
-    echo $OUTPUT->footer();
+echo $OUTPUT->footer();

@@ -1,5 +1,4 @@
-<?php // $Id: menus.php,v 1.2 2008/03/23 09:11:38 julmis Exp $
-
+<?php
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -25,51 +24,57 @@
  * @version: reviewed by MyLearningFactory (valery.fremaux@gmail.com)
  */
 
-    require_once('../../config.php');
-    include_once($CFG->dirroot.'/local/cms/locallib.php');
-    
-    $id       = optional_param('id', 0, PARAM_INT);
-    $courseid = optional_param('course', SITEID, PARAM_INT);
+require('../../config.php');
+require_once($CFG->dirroot.'/local/cms/locallib.php');
 
-    require_login();
-    
-    $USER->editing = false;
+$id = optional_param('id', 0, PARAM_INT);
+$courseid = optional_param('course', SITEID, PARAM_INT);
 
-    confirm_sesskey();
+require_login();
 
-    if ( !$course = $DB->get_record('course', array('id' => $courseid)) ) {
-        print_error('coursemisconf');
-    }
+$USER->editing = false;
 
-    /// Define context
-    if ($courseid == SITEID ) {
-	    $context = context_system::instance();
-    } else {
-	    $context = context_course::instance($course->id);
-    }
+confirm_sesskey();
 
-    require_capability('local/cms:manageview', $context);
+if (!$course = $DB->get_record('course', array('id' => $courseid))) {
+    print_error('coursemisconf');
+}
 
-    $stradministration = get_string('administration');
-    $strcms            = get_string('cms', 'local_cms');
-    $strmenus          = get_string('menus', 'local_cms');
+// Define context.
 
-	$url = $CFG->wwwroot.'/local/cms/menus.php?course='.$courseid;
-    $PAGE->set_url($url);
-    $PAGE->set_pagelayout('admin');
-    $PAGE->navbar->add($strcms.' '.$stradministration, $CFG->wwwroot.'/local/cms/index.php?course='.$course->id.'&amp;sesskey='.sesskey());
-    $PAGE->navbar->add($strmenus);
-    $PAGE->set_context($context);
-    $PAGE->set_title($strmenus);
-    $PAGE->set_heading($strmenus);
-    
-    echo $OUTPUT->header();
+if ($courseid == SITEID ) {
+    $context = context_system::instance();
+} else {
+    $context = context_course::instance($course->id);
+}
 
-    echo $OUTPUT->box_start();
-    echo $OUTPUT->heading($stradministration);
+require_capability('local/cms:manageview', $context);
 
-    // Print list of menus
-    cms_print_menus($course->id);
+$stradministration = get_string('administration');
+$strcms = get_string('cms', 'local_cms');
+$strmenus = get_string('menus', 'local_cms');
 
-    echo $OUTPUT->box_end();
-    echo $OUTPUT->footer();
+$url = new moodle_url('/local/cms/menus.php', array('course' => $courseid));
+$PAGE->set_url($url);
+$PAGE->set_pagelayout('admin');
+if ($course->id > SITEID) {
+    $PAGE->navbar->add($course->shortname, new moodle_url('/course/view.php', array('id' => $course->id)));
+}
+$PAGE->navbar->add($strcms.' '.$stradministration, new moodle_url('/local/cms/index.php', array('course' => $course->id, 'sesskey' => sesskey())));
+$PAGE->navbar->add($strmenus);
+$PAGE->set_context($context);
+$PAGE->set_title($strmenus);
+$PAGE->set_heading($strmenus);
+
+$renderer = $PAGE->get_renderer('local_cms');
+
+echo $OUTPUT->header();
+
+echo $OUTPUT->box_start();
+echo $OUTPUT->heading($stradministration);
+
+// Print list of menus.
+echo $renderer->menus($course->id);
+
+echo $OUTPUT->box_end();
+echo $OUTPUT->footer();

@@ -1,58 +1,78 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-    /**
-    * @package local_cms
-    * @category local
-    * @date 27/09/2009
-    * @version: reviewed by MyLearningFactory (valery.fremaux@gmail.com)
-    *
-    * This is a special script for hooking the Moodle index page. 
-    * It adds a sideway to standard index when subnavigating to 
-    * a virtual cms subdir.
-    */
-    
-    // Pre defines if not initialized
-    if (!defined('FRONTPAGECMS')) define ('FRONTPAGECMS', 52);
-    
-    if (empty($CFG->local_cms_virtual_path)) {
-        set_config('local_cms_virtual_path', '/documentation');
-    }
+/**
+ * @package local_cms
+ * @category local
+ * @date 27/09/2009
+ * @version: reviewed by MyLearningFactory (valery.fremaux@gmail.com)
+ *
+ * This is a special script for hooking the Moodle index page. 
+ * It adds a sideway to standard index when subnavigating to 
+ * a virtual cms subdir.
+ */
 
-    // capture pid param and redirect.
-    // this cause proper URL to be used to access the documentation page
-    if ($pid = optional_param('pid', '', PARAM_INT)){
-        $page = $DB->get_record('local_cms_navi_data', array('pageid' => $pid));
-        if ($CFG->slasharguments){
-            redirect($CFG->wwwroot.'/local/cms/view.php'.$CFG->local_cms_virtual_path.'/'.$page->pagename);
-        } else {
-            redirect($CFG->wwwroot.'/local/cms/view.php?page='.$page->pagename);
-        }
-    }
-    
-    // get pagename
-    if (!$pagename = optional_param('page', '', PARAM_FILE)){
-	    if ($CFG->slasharguments) {
-	        // Support sitelevel slasharguments
-	        // in form /index.php/<$CFG->block_cmsnavigation_cmsvirtual>/<pagename>
-	        $relativepath = get_file_argument(basename($_SERVER['SCRIPT_FILENAME']));
-	        if ( preg_match('#^'.$CFG->local_cms_virtual_path.'/([a-z0-9\_\- ]+)#i', $relativepath, $matches) ) {
-	            redirect($CFG->wwwroot.'/local/cms/view.php?page='.$matches[1]);
-	        }
-	        unset($args, $relativepath);
-	    }
-	}
+// Pre defines if not initialized.
 
-	// last case is if frontpage format is set to CMS format.    
-    if (isloggedin() and !isguestuser() and isset($CFG->frontpageloggedin)) {
-        $frontpagelayout = $CFG->frontpageloggedin;
+if (!defined('FRONTPAGECMS')) define ('FRONTPAGECMS', 52);
+
+$cmsconfig = get_config('local_cms');
+if (empty($cmsconfig->virtual_path)) {
+    set_config('virtual_path', '/documentation', 'local_cms');
+}
+
+// capture pid param and redirect.
+// this cause proper URL to be used to access the documentation page.
+
+if ($pid = optional_param('pid', '', PARAM_INT)) {
+    $page = $DB->get_record('local_cms_navi_data', array('pageid' => $pid));
+    if ($CFG->slasharguments) {
+        redirect($CFG->wwwroot.'/local/cms/view.php'.$cmsconfig->virtual_path.'/'.urlencode($page->pagename));
     } else {
-        $frontpagelayout = $CFG->frontpage;
+        redirect(new moodle_url('/local/cms/view.php', array('page' => urlencode($page->pagename))));
     }
-    
-    if ( $frontpagelayout == FRONTPAGECMS or !empty($pagename) ) {
-    	$courseid = optional_param('id', SITEID, PARAM_INT);
-    	require_once($CFG->dirroot .'/local/cms/view.php');
-    	die;
+}
+
+// get pagename.
+
+if (!$pagename = optional_param('page', '', PARAM_FILE)) {
+    if ($CFG->slasharguments) {
+        /*
+         * Support sitelevel slasharguments
+         */
+        $relativepath = get_file_argument(basename($_SERVER['SCRIPT_FILENAME']));
+        if (preg_match('#^'.$cmsconfig->virtual_path.'/(.*)#i', $relativepath, $matches)) {
+            redirect(new moodle_url('/local/cms/view.php', array('page' => $matches[1]));
+        }
+        unset($args, $relativepath);
     }
-    
-    // let continue normally if no sidehook has been catched
+}
+
+// last case is if frontpage format is set to CMS format.
+ 
+if (isloggedin() and !isguestuser() and isset($CFG->frontpageloggedin)) {
+    $frontpagelayout = $CFG->frontpageloggedin;
+} else {
+    $frontpagelayout = $CFG->frontpage;
+}
+
+if ( $frontpagelayout == FRONTPAGECMS or !empty($pagename) ) {
+    $courseid = optional_param('id', SITEID, PARAM_INT);
+    require_once($CFG->dirroot .'/local/cms/view.php');
+    die;
+}
+
+// let continue normally if no sidehook has been catched.

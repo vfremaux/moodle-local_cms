@@ -1,5 +1,4 @@
-<?php // $Id: pagediff.php,v 1.3 2008/03/23 09:11:38 julmis Exp $
-
+<?php
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -30,228 +29,228 @@
  * testing, alot of testing....
  */
 
-    require('../../config.php');
-    require($CFG->dirroot.'/local/cms/locallib.php');
+require('../../config.php');
+require($CFG->dirroot.'/local/cms/locallib.php');
 
-    $versionid   = required_param('id',  PARAM_INT);
-    $courseid = required_param('course',  PARAM_INT);
+$versionid   = required_param('id',  PARAM_INT);
+$courseid = required_param('course',  PARAM_INT);
 
-    if ( !$course = $DB->get_record('course', array('id' => $courseid)) ) {
-        print_error("Invalid course id!!!");
+if (!$course = $DB->get_record('course', array('id' => $courseid))) {
+    print_error('coursmisconf');
+}
+
+require_login($course->id);
+
+confirm_sesskey();
+
+if ($courseid == SITEID) {
+    $context = context_system::instance();
+} else {
+    $context = context_course::instance($course->id);
+}
+
+require_capability('local/cms:editpage', $context);
+
+$strpagediff = get_string('pagediff', 'local_cms');
+$strcms = get_string('cms', 'local_cms');
+$stradministration = get_string('administration');
+
+$url = new moodle_url('/local/cms/pagediff.php', array('course' => $courseid));
+$PAGE->set_url($url);
+$PAGE->set_pagelayout('admin');
+$PAGE->navbar->add($strcms.' '.$stradministration, new moodle_url('/local/cms/index.php', array('course' => $course->id, 'sesskey' => sesskey())));
+$PAGE->navbar->add($strpagediff);
+$PAGE->set_context($context);
+$PAGE->set_title($strpagediff);
+$PAGE->set_heading($strpagediff);
+
+echo $OUTPUT->header();
+
+if ($selected = $DB->get_record('local_cms_pages_history', array('id' => $versionid))) {
+    $preversion = floatval($selected->version) - 0.1;
+    if ( $preversion == 1  ) {
+        $preversion = '1.0';
     }
 
-    require_login($course->id);
+    if ($previous = $DB->get_record('local_cms_pages_history', array('pageid' => $selected->pageid, 'version' => $preversion))) {
+        $diff = PHPDiff($previous->content, $selected->content);
+    }
+}
 
-    confirm_sesskey();
+$strversion = get_string('version');
 
-	if ($courseid == SITEID){
-	    $context = context_system::instance();
-	} else {
-	    $context = context_course::instance($course->id);
-	}
+if ( !empty($diff) ) {
+    error_reporting(0);
+    $oldfile = explode("\n", cms_format_html($previous->content, false));
+    $newfile = explode("\n", cms_format_html($selected->content, false));
 
-    require_capability('local/cms:editpage', $context);
-    
-    $strpagediff = get_string('pagediff', 'local_cms');
-    $strcms = get_string('cms', 'local_cms');
-    $stradministration = get_string('administration');
+    $difflines = explode("\n", $diff);
 
-	$url = $CFG->wwwroot.'/local/cms/pagediff.php?course='.$courseid;
-    $PAGE->set_url($url);
-    $PAGE->set_pagelayout('admin');
-    $PAGE->navbar->add($strcms.' '.$stradministration, $CFG->wwwroot.'/local/cms/index.php?course='.$course->id.'&amp;sesskey='.sesskey());
-    $PAGE->navbar->add($strpagediff);
-    $PAGE->set_context($context);
-    $PAGE->set_title($strpagediff);
-    $PAGE->set_heading($strpagediff);
+    echo '<table border="1" cellpadding="4" width="100%">';
+    echo '<tr><td width="50%">'. $strversion . ': '. $preversion .'</td>';
+    echo '<td width="50%">'. $strversion .': '. $selected->version .'</td></tr>';
 
-    echo $OUTPUT->header();
+    foreach ($difflines as $line) {
+        preg_match("/^([0-9\,]+)([a|c|d])([0-9\,]+)$/i", $line, $match);
+        $out = $match[1];
+        $status = $match[2];
+        $in = $match[3];
 
-    if ( $selected = $DB->get_record('local_cms_pages_history', array('id' => $versionid)) ) {
-        $preversion = floatval($selected->version) - 0.1;
-        if ( $preversion == 1  ) {
-            $preversion = '1.0';
-        }
+        switch ($status) {
+            case 'a': // Added lines
+                echo '<tr valign="top">';
+                echo '<td width="50%" style="background-color: #f5f5f5; font-family: monospace;">';
 
-        if ( $previous = $DB->get_record('local_cms_pages_history', array('pageid' => $selected->pageid, 'version' => $preversion)) ) {
-            $diff = PHPDiff($previous->content, $selected->content);
+                list($oldstart, $oldend) = split(",", $out);
+                list($newstart, $newend) = split(",", $in);
+                if ( !empty($oldend) ) { // It's a range of lines
+                    $start = $oldstart - 1;
+                    $end   = $oldend - 1;
+                    echo '<table border="0">';
+                    for ( $i = $start; $i <= $end; $i++ ) {
+                        echo '<tr valign="top">';
+                        echo '<td>'. ($i + 1) .'.</td>';
+                        echo '<td>'. htmlentities($oldfile[$i], ENT_QUOTES, 'utf-8') .'</td>';
+                        echo '</tr>';
+                    }
+                    echo '</table>';
+                } else { // single line.
+                    echo '<table border="0">';
+                    echo '<tr valign="top"><td>'. $oldstart .'.</td>';
+                    echo '<td>'. htmlentities($oldfile[$oldstart], ENT_QUOTES, 'utf-8') .'</td>';
+                    echo '</tr></table>';
+                }
+
+                echo '</td>';
+                echo '<td width="50%" style="background-color: #009933; font-family: monospace;">';
+
+                if ( !empty($newend) ) { // It's range of lines.
+                    $start = $newstart - 1;
+                    $end = $newend - 1;
+                    echo '<table border="0">';
+                    for ( $i = $start; $i <= $end; $i++ ) {
+                        echo '<tr valign="top">';
+                        echo '<td>'. ($i + 1) .'.</td>';
+                        echo '<td>'. htmlentities($newfile[$i], ENT_QUOTES, 'utf-8') .'</td>';
+                        echo '</tr>';
+                    }
+                    echo '</table>';
+
+                } else { // Single line.
+                    echo '<table border="0">';
+                    echo '<tr valign="top"><td>'. $newstart .'.</td>';
+                    echo '<td>'. htmlentities($newfile[($newstart - 1)], ENT_QUOTES, 'utf-8') .'</td>';
+                    echo '</tr></table>';
+                }
+                echo '</td>';
+                echo '</tr>';
+            break;
+            case 'c': // Changed lines
+                echo '<tr valign="top">';
+                echo '<td width="50%" style="background-color: #f5f5f5; font-family: monospace;">';
+
+                list($oldstart, $oldend) = split(",", $out);
+                list($newstart, $newend) = split(",", $in);
+                if ( !empty($oldend) ) { // It's a range of lines
+                    $start = $oldstart - 1;
+                    $end   = $oldend - 1;
+                    echo '<table border="0">';
+                    for ( $i = $start; $i <= $end; $i++ ) {
+                        echo '<tr valign="top">';
+                        echo '<td>'. ($i + 1) .'.</td>';
+                        echo '<td>'. htmlentities($oldfile[$i], ENT_QUOTES, 'utf-8') .'</td>';
+                        echo '</tr>';
+                    }
+                    echo '</table>';
+                } else { // single line.
+                    echo '<table border="0">';
+                    echo '<tr valign="top"><td>'. $oldstart .'.</td>';
+                    echo '<td>'. htmlentities($oldfile[($oldstart - 1)], ENT_QUOTES, 'utf-8') .'</td>';
+                    echo '</tr></table>';
+                }
+
+                echo '</td>';
+                echo '<td width="50%" style="background-color: #fff999; font-family: monospace;">';
+
+                if (!empty($newend)) { // It's range of lines.
+                    $start = $newstart - 1;
+                    $end = $newend - 1;
+                    echo '<table border="0">';
+                    for ( $i = $start; $i <= $end; $i++ ) {
+                        echo '<tr valign="top">';
+                        echo '<td>'. ($i + 1) .'.</td>';
+                        echo '<td>'. htmlentities($newfile[$i], ENT_QUOTES, 'utf-8') .'</td>';
+                        echo '</tr>';
+                    }
+                    echo '</table>';
+
+                } else { // Single line.
+                    echo '<table border="0">';
+                    echo '<tr valign="top"><td>'. $newstart .'.</td>';
+                    echo '<td>'. htmlentities($newfile[($newstart - 1)], ENT_QUOTES, 'utf-8') .'</td>';
+                    echo '</tr></table>';
+                }
+                echo '</td>';
+                echo '</tr>';
+            break;
+            case 'd': // Deleted lines
+                echo '<tr valign="top">';
+                echo '<td width="50%" style="background-color: #990033; font-family: monospace;">';
+
+                list($oldstart, $oldend) = split(",", $out);
+                list($newstart, $newend) = split(",", $in);
+
+                if ( !empty($oldend) ) { // It's a range of lines
+                    $start = $oldstart - 1;
+                    $end   = $oldend - 1;
+                    echo '<table border="0">';
+                    for ( $i = $start; $i <= $end; $i++ ) {
+                        echo '<tr valign="top">';
+                        echo '<td>'. ($i + 1) .'.</td>';
+                        echo '<td>'. htmlentities($oldfile[$i], ENT_QUOTES, 'utf-8') .'</td>';
+                        echo '</tr>';
+                    }
+                    echo '</table>';
+                } else { // single line.
+                    echo '<table border="0">';
+                    echo '<tr valign="top"><td>'. $oldstart .'.</td>';
+                    echo '<td>'. htmlentities($oldfile[($oldstart - 1)], ENT_QUOTES, 'utf-8') .'</td>';
+                    echo '</tr></table>';
+                }
+
+                echo '</td>';
+                echo '<td width="50%" style="background-color: #f5f5f5; font-family: monospace;">';
+
+                if (!empty($newend)) { // It's range of lines.
+                    $start = $newstart - 1;
+                    $end = $newend - 1;
+                    echo '<table border="0">';
+                    for ($i = $start; $i <= $end; $i++) {
+                        echo '<tr valign="top">';
+                        echo '<td>'. ($i + 1) .'.</td>';
+                        echo '<td>'. htmlentities($newfile[$i], ENT_QUOTES, 'utf-8') .'</td>';
+                        echo '</tr>';
+                    }
+                    echo '</table>';
+
+                } else { // Single line.
+                    echo '<table border="0">';
+                    echo '<tr valign="top"><td>'. $newstart .'.</td>';
+                    echo '<td>&nbsp;</td>';
+                    echo '</tr></table>';
+                }
+                echo '</td>';
+                echo '</tr>';
+            break;
         }
     }
 
-    $strversion = get_string('version');
+    echo '</table>';
+}
 
-    if ( !empty($diff) ) {
-        error_reporting(0);
-        $oldfile = explode("\n", cms_format_html($previous->content, false));
-        $newfile = explode("\n", cms_format_html($selected->content, false));
+echo $OUTPUT->footer();
 
-        $difflines = explode("\n", $diff);
-
-        echo '<table border="1" cellpadding="4" width="100%">';
-        echo '<tr><td width="50%">'. $strversion . ': '. $preversion .'</td>';
-        echo '<td width="50%">'. $strversion .': '. $selected->version .'</td></tr>';
-
-        foreach ( $difflines as $line ) {
-            preg_match("/^([0-9\,]+)([a|c|d])([0-9\,]+)$/i", $line, $match);
-            $out = $match[1];
-            $status = $match[2];
-            $in = $match[3];
-
-            switch ( $status ) {
-                case 'a': // Added lines
-                    echo '<tr valign="top">';
-                    echo '<td width="50%" style="background-color: #f5f5f5; font-family: monospace;">';
-
-                    list($oldstart, $oldend) = split(",", $out);
-                    list($newstart, $newend) = split(",", $in);
-                    if ( !empty($oldend) ) { // It's a range of lines
-                        $start = $oldstart - 1;
-                        $end   = $oldend - 1;
-                        echo '<table border="0">';
-                        for ( $i = $start; $i <= $end; $i++ ) {
-                            echo '<tr valign="top">';
-                            echo '<td>'. ($i + 1) .'.</td>';
-                            echo '<td>'. htmlentities($oldfile[$i], ENT_QUOTES, 'utf-8') .'</td>';
-                            echo '</tr>';
-                        }
-                        echo '</table>';
-                    } else { // single line.
-                        echo '<table border="0">';
-                        echo '<tr valign="top"><td>'. $oldstart .'.</td>';
-                        echo '<td>'. htmlentities($oldfile[$oldstart], ENT_QUOTES, 'utf-8') .'</td>';
-                        echo '</tr></table>';
-                    }
-
-                    echo '</td>';
-                    echo '<td width="50%" style="background-color: #009933; font-family: monospace;">';
-
-                    if ( !empty($newend) ) { // It's range of lines.
-                        $start = $newstart - 1;
-                        $end = $newend - 1;
-                        echo '<table border="0">';
-                        for ( $i = $start; $i <= $end; $i++ ) {
-                            echo '<tr valign="top">';
-                            echo '<td>'. ($i + 1) .'.</td>';
-                            echo '<td>'. htmlentities($newfile[$i], ENT_QUOTES, 'utf-8') .'</td>';
-                            echo '</tr>';
-                        }
-                        echo '</table>';
-
-                    } else { // Single line.
-                        echo '<table border="0">';
-                        echo '<tr valign="top"><td>'. $newstart .'.</td>';
-                        echo '<td>'. htmlentities($newfile[($newstart - 1)], ENT_QUOTES, 'utf-8') .'</td>';
-                        echo '</tr></table>';
-                    }
-                    echo '</td>';
-                    echo '</tr>';
-                break;
-                case 'c': // Changed lines
-                    echo '<tr valign="top">';
-                    echo '<td width="50%" style="background-color: #f5f5f5; font-family: monospace;">';
-
-                    list($oldstart, $oldend) = split(",", $out);
-                    list($newstart, $newend) = split(",", $in);
-                    if ( !empty($oldend) ) { // It's a range of lines
-                        $start = $oldstart - 1;
-                        $end   = $oldend - 1;
-                        echo '<table border="0">';
-                        for ( $i = $start; $i <= $end; $i++ ) {
-                            echo '<tr valign="top">';
-                            echo '<td>'. ($i + 1) .'.</td>';
-                            echo '<td>'. htmlentities($oldfile[$i], ENT_QUOTES, 'utf-8') .'</td>';
-                            echo '</tr>';
-                        }
-                        echo '</table>';
-                    } else { // single line.
-                        echo '<table border="0">';
-                        echo '<tr valign="top"><td>'. $oldstart .'.</td>';
-                        echo '<td>'. htmlentities($oldfile[($oldstart - 1)], ENT_QUOTES, 'utf-8') .'</td>';
-                        echo '</tr></table>';
-                    }
-
-                    echo '</td>';
-                    echo '<td width="50%" style="background-color: #fff999; font-family: monospace;">';
-
-                    if ( !empty($newend) ) { // It's range of lines.
-                        $start = $newstart - 1;
-                        $end = $newend - 1;
-                        echo '<table border="0">';
-                        for ( $i = $start; $i <= $end; $i++ ) {
-                            echo '<tr valign="top">';
-                            echo '<td>'. ($i + 1) .'.</td>';
-                            echo '<td>'. htmlentities($newfile[$i], ENT_QUOTES, 'utf-8') .'</td>';
-                            echo '</tr>';
-                        }
-                        echo '</table>';
-
-                    } else { // Single line.
-                        echo '<table border="0">';
-                        echo '<tr valign="top"><td>'. $newstart .'.</td>';
-                        echo '<td>'. htmlentities($newfile[($newstart - 1)], ENT_QUOTES, 'utf-8') .'</td>';
-                        echo '</tr></table>';
-                    }
-                    echo '</td>';
-                    echo '</tr>';
-                break;
-                case 'd': // Deleted lines
-                    echo '<tr valign="top">';
-                    echo '<td width="50%" style="background-color: #990033; font-family: monospace;">';
-
-                    list($oldstart, $oldend) = split(",", $out);
-                    list($newstart, $newend) = split(",", $in);
-
-                    if ( !empty($oldend) ) { // It's a range of lines
-                        $start = $oldstart - 1;
-                        $end   = $oldend - 1;
-                        echo '<table border="0">';
-                        for ( $i = $start; $i <= $end; $i++ ) {
-                            echo '<tr valign="top">';
-                            echo '<td>'. ($i + 1) .'.</td>';
-                            echo '<td>'. htmlentities($oldfile[$i], ENT_QUOTES, 'utf-8') .'</td>';
-                            echo '</tr>';
-                        }
-                        echo '</table>';
-                    } else { // single line.
-                        echo '<table border="0">';
-                        echo '<tr valign="top"><td>'. $oldstart .'.</td>';
-                        echo '<td>'. htmlentities($oldfile[($oldstart - 1)], ENT_QUOTES, 'utf-8') .'</td>';
-                        echo '</tr></table>';
-                    }
-
-                    echo '</td>';
-                    echo '<td width="50%" style="background-color: #f5f5f5; font-family: monospace;">';
-
-                    if ( !empty($newend) ) { // It's range of lines.
-                        $start = $newstart - 1;
-                        $end = $newend - 1;
-                        echo '<table border="0">';
-                        for ( $i = $start; $i <= $end; $i++ ) {
-                            echo '<tr valign="top">';
-                            echo '<td>'. ($i + 1) .'.</td>';
-                            echo '<td>'. htmlentities($newfile[$i], ENT_QUOTES, 'utf-8') .'</td>';
-                            echo '</tr>';
-                        }
-                        echo '</table>';
-
-                    } else { // Single line.
-                        echo '<table border="0">';
-                        echo '<tr valign="top"><td>'. $newstart .'.</td>';
-                        echo '<td>&nbsp;</td>';
-                        echo '</tr></table>';
-                    }
-                    echo '</td>';
-                    echo '</tr>';
-                break;
-            }
-        }
-
-        echo '</table>';
-    }
-
-    echo $OUTPUT->footer();
-
-//////////////////////////////// Supporting functions ////////////////////////////////
+/******************** Supporting functions ************************************/
 
 /*
     Copyright 2003,2004 Nils Knappmeier (nk@knappi.org)
@@ -296,12 +295,12 @@ function PHPDiff($old,$new) {
     // build a reverse-index array using the line as key and line number as value
     // don't store blank lines, so they won't be targets of the shortest distance
     // search
-    foreach($t1 as $i=>$x) {
+    foreach ($t1 as $i => $x) {
         if ($x > '') {
             $r1[$x][]=$i;
         }
     }
-    foreach($t2 as $i=>$x) {
+    foreach ($t2 as $i => $x) {
         if ($x > '') {
             $r2[$x][]=$i;
         }
@@ -327,48 +326,48 @@ function PHPDiff($old,$new) {
         $best2 = count($t2);
         $s1 = $a1;
         $s2 = $a2;
-        while(($s1+$s2-$a1-$a2) < ($best1+$best2-$a1-$a2)) {
+        while (($s1 + $s2 - $a1 - $a2) < ($best1 + $best2 - $a1 - $a2)) {
             $d=-1;
-            foreach((array)@$r1[$t2[$s2]] as $n) {
-                if ($n>=$s1) {
+            foreach ((array)@$r1[$t2[$s2]] as $n) {
+                if ($n >= $s1) {
                     $d = $n;
                     break;
                 }
             }
-            if ($d>=$s1 && ($d+$s2-$a1-$a2)<($best1+$best2-$a1-$a2)) {
+            if ($d >= $s1 && ($d + $s2 - $a1 - $a2) < ($best1 + $best2 - $a1 - $a2)) {
                 $best1 = $d;
                 $best2 = $s2;
             }
             $d = -1;
-            foreach((array)@$r2[$t1[$s1]] as $n) {
-                if ($n>=$s2) {
+            foreach ((array)@$r2[$t1[$s1]] as $n) {
+                if ($n >= $s2) {
                     $d = $n;
                     break;
                 }
             }
-            if ($d>=$s2 && ($s1+$d-$a1-$a2)<($best1+$best2-$a1-$a2)) {
+            if ($d >= $s2 && ($s1 + $d - $a1 - $a2) < ($best1 + $best2 - $a1 - $a2)) {
                 $best1 = $s1;
                 $best2 = $d;
             }
             $s1++;
             $s2++;
         }
-        while ($a1<$best1) {
+        while ($a1 < $best1) {
             $actions[] = 1;
             $a1++;
         }  // deleted elements
-        while ($a2<$best2) {
+        while ($a2 < $best2) {
             $actions[] = 2;
             $a2++;
         }  // added elements
     }
 
     // we've reached the end of one list, now walk to the end of the other
-    while($a1 < count($t1)) {
+    while ($a1 < count($t1)) {
         $actions[] = 1;
         $a1++;
     }  // deleted elements
-    while($a2 < count($t2)) {
+    while ($a2 < count($t2)) {
         $actions[] = 2;
         $a2++;
     }  // added elements
@@ -382,7 +381,7 @@ function PHPDiff($old,$new) {
     $x0 = $x1 = 0;
     $y0 = $y1 = 0;
     $out = array();
-    foreach($actions as $act) {
+    foreach ($actions as $act) {
         if ($act==1) {
             $op|=$act;
             $x1++;

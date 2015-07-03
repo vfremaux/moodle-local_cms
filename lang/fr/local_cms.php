@@ -1,4 +1,4 @@
-<?php // $Id: cms.php,v 1.3 2010/12/25 13:41:32 vf Exp $
+<?php
 
 $string['cms:manageblocks'] = 'Gérer les blocs';
 $string['cms:manageview'] = 'Gérer les vues';
@@ -40,6 +40,8 @@ $string['linkto'] = 'Lier vers ...';
 $string['managemenus'] = 'Gérer les volumes';
 $string['managepages'] = 'Gérer les pages';
 $string['menu'] = 'Volume CMS';
+$string['inmenu'] = 'Visible dans le bloc de navigation';
+$string['notinmenu'] = 'Non visible dans le bloc de navigation';
 $string['menuadded'] = 'Nouveau volume ajouté';
 $string['menudeleted'] = 'volume supprimé!';
 $string['menudeletesure'] = 'Vous êtes sur le point de <strong>supprimer</strong> le menu <strong>{$a}</strong>!<br />Voulez-vous continuer ?';
@@ -96,5 +98,8 @@ $string['viewpages'] = 'Voir la liste des pages';
 $string['unknownauthor'] = 'Auteur inconnu';
 $string['history'] = 'Historique';
 $string['pagediff'] = 'Comparaison de version';
+
+$string['cms_help'] = 'L\'extension CMS permet de construire des volumes (menus) dans lequel on bâtit des volumes arborescents de pages. Des blocs peuvent être positionnés
+dans les cours et peuvent être attachés à un des menus disponibles.';
 
 

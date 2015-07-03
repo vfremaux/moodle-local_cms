@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -25,85 +24,85 @@
  * @version: reviewed by MyLearningFactory (valery.fremaux@gmail.com)
  */
 
-    require_once('../../config.php');
-    include_once($CFG->dirroot.'/local/cms/locallib.php');
+require_once('../../config.php');
+include_once($CFG->dirroot.'/local/cms/locallib.php');
 
-    $courseid = required_param('course', PARAM_INT);
+$courseid = required_param('course', PARAM_INT);
 
-    // Require login
-    require_login();
-    
-    confirm_sesskey();
+// Require login
+require_login();
 
-    if ( !$course = $DB->get_record('course', array('id' => $courseid)) ) {
-        print_error("coursemisconf");
-    }
+confirm_sesskey();
 
-/// Get a proper context
+if ( !$course = $DB->get_record('course', array('id' => $courseid)) ) {
+    print_error("coursemisconf");
+}
 
-    if ( empty($courseid) ) {
-        $courseid = SITEID;
-        $context = context_system::instance();
-    } else {
-        $context = context_course::instance($courseid);
-    }
-    require_capability('local/cms:editpage', $context);
+// Get a proper context.
 
-// Print page header
+if ( empty($courseid) ) {
+    $courseid = SITEID;
+    $context = context_system::instance();
+} else {
+    $context = context_course::instance($courseid);
+}
+require_capability('local/cms:editpage', $context);
 
-    $strcms            	= get_string('cms', 'local_cms');
-    $stractres 			= get_string('activities') .'/'. get_string('resources');
-    $stradministration 	= get_string('administration');
-    
-	$url = $CFG->wwwroot.'/local/cms/activities.php?course='.$courseid;
-    $PAGE->set_url($url);
-    $PAGE->set_context($context);
-    $PAGE->set_title($straddnew);
-    $PAGE->set_heading($straddnew);
-	$PAGE->navbar->add($strcms.' '.$stradministration, $CFG->wwwroot."/index.php?course={$course->id}&amp;sesskey={$USER->sesskey}");
-	$PAGE->navbar->add($stractres);
-	$PAGE->requires->js('/local/cms/js/cms.js');
+// Print page header.
 
-    echo $OUTPUT->header();
+$strcms = get_string('cms', 'local_cms');
+$stractres = get_string('activities') .'/'. get_string('resources');
+$stradministration = get_string('administration');
 
-// Print page
+$url = new moodle_url('/local/cms/activities.php', array('course' => $courseid));
+$PAGE->set_url($url);
+$PAGE->set_context($context);
+$PAGE->set_title($straddnew);
+$PAGE->set_heading($straddnew);
+$PAGE->navbar->add($strcms.' '.$stradministration, new moodle_url('/index.php', array('course' => $course->id, 'sesskey' => $USER->sesskey)));
+$PAGE->navbar->add($stractres);
+$PAGE->requires->js('/local/cms/js/cms.js');
 
-    $straction 			= get_string('action');
-    $strchoose 			= get_string('choose');
+echo $OUTPUT->header();
 
-    $table = new html_table();
+// Print page.
 
-    $table->head = array($stractres, $straction);
-    $table->align = array('left', 'left');
-    $table->cellpadding = 2;
-    $table->data = array();
+$straction = get_string('action');
+$strchoose = get_string('choose');
 
-    $modinfo = unserialize($course->modinfo);
-    if ( !empty($modinfo) ) {
-        foreach ( $modinfo as $mod ) {
-            $row = array();
-            if ( empty($mod->visible) ) {
-                continue;
-            }
-            if ( !empty($mod->icon) ) {
-                $icon = "$CFG->pixpath/$mod->icon";
-            } else {
-                $icon = $OUTPUT->pix_url('icon', $mod->mod);
-            }
-            $icon = '<img src="'. $icon .'" alt="" />';
-            $instancename = urldecode($mod->name);
-            $instancename = format_string($instancename, true,  $course->id);
+$table = new html_table();
 
-            $javascript  = "<a href=\"javascript: void(set_value('/mod/{$mod->mod}/view.php?id={$mod->cm}', '{$CFG->wwwroot}'));\">";
-            $javascript .= $strchoose .'</a>';
-            //echo $icon . ' ';
-            //echo $instancename . "<br />\n";
-            $row[] = $icon . ' '. $instancename;
-            $row[] = $javascript;
-            array_push($table->data, $row);
+$table->head = array($stractres, $straction);
+$table->align = array('left', 'left');
+$table->cellpadding = 2;
+$table->data = array();
+
+$modinfo = unserialize($course->modinfo);
+if ( !empty($modinfo) ) {
+    foreach ( $modinfo as $mod ) {
+        $row = array();
+        if ( empty($mod->visible) ) {
+            continue;
         }
+        if ( !empty($mod->icon) ) {
+            $icon = "$CFG->pixpath/$mod->icon";
+        } else {
+            $icon = $OUTPUT->pix_url('icon', $mod->mod);
+        }
+        $icon = '<img src="'. $icon .'" alt="" />';
+        $instancename = urldecode($mod->name);
+        $instancename = format_string($instancename, true,  $course->id);
+
+        $javascript  = "<a href=\"javascript: void(set_value('/mod/{$mod->mod}/view.php?id={$mod->cm}', '{$CFG->wwwroot}'));\">";
+        $javascript .= $strchoose .'</a>';
+        //echo $icon . ' ';
+        //echo $instancename . "<br />\n";
+        $row[] = $icon . ' '. $instancename;
+        $row[] = $javascript;
+        array_push($table->data, $row);
     }
+}
 
-    echo html_writer::table($table);
+echo html_writer::table($table);
 
- 	echo $OUTPUT->footer();
+echo $OUTPUT->footer();
