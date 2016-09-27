@@ -18,10 +18,10 @@
  * for adding a new menu
  *
  * @package    local_cms
- * @author Moodle 1.9 Janne Mikkonen
- * @reauthor Moodle 2.x Valery Fremaux <valery.fremaux@gmail.com>
+ * @category   local
+ * @author     Moodle 1.9 Janne Mikkonen
+ * @reauthor   Moodle 2.x Valery Fremaux <valery.fremaux@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @version: reviewed by MyLearningFactory (valery.fremaux@gmail.com)
  */
 
 require('../../config.php');
@@ -29,6 +29,8 @@ require_once($CFG->dirroot.'/local/cms/forms/editmenu_form.php');
 require_once($CFG->dirroot.'/local/cms/lib.php');
 
 $courseid = optional_param('course', SITEID, PARAM_INT);
+
+// Security.
 
 confirm_sesskey();
 

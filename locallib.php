@@ -14,17 +14,17 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * local librairies
  *
  * @package    local_cms
- * @author Moodle 1.9 Janne Mikkonen
- * @reauthor Moodle 2.x Valery Fremaux <valery.fremaux@gmail.com>
+ * @category   local
+ * @author     Moodle 1.9 Janne Mikkonen
+ * @author     Moodle 2.x Valery Fremaux <valery.fremaux@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @version: reviewed by MyLearningFactory (valery.fremaux@gmail.com)
  */
-
-defined('MOODLE_INTERNAL') or die('Direct access to this script is forbidden.');
 
 require_once($CFG->dirroot.'/local/cms/lib.php');
 
@@ -42,6 +42,7 @@ function cms_get_page_data_by_id($courseidfoo, $pageid) {
                 p.id,
                 p.body,
                 p.modified,
+                p.publish,
                 nd.isfp,
                 nd.parentid,
                 nd.naviid,
@@ -105,6 +106,7 @@ function cms_get_page_data($courseid = 0, $naviid = 0, $pagename = '') {
             p.id,
             p.body,
             p.modified,
+            p.lastuserid,
             nd.isfp,
             nd.parentid,
             nd.id as navidataid,
@@ -235,11 +237,11 @@ function cms_get_page_data_from_id($pageid) {
     $pageid = clean_param($pageid, PARAM_INT);
 
     $sql  = "
-        SELECT 
-            p.*, 
-            n.title, 
-            n.showinmenu, 
-            n.id AS navidataid, 
+        SELECT
+            p.*,
+            n.title,
+            n.showinmenu,
+            n.id AS navidataid,
             n.naviid as nid,
             n.parentid,
             n.url,
@@ -414,7 +416,7 @@ class cms_pages_menu {
     */
     function __construct($menuid, $courseid = 1) {
         global $CFG, $USER, $DB, $OUTPUT;
-        
+
         $this->menuid = clean_param($menuid, PARAM_INT);
         $this->courseid = clean_param($courseid, PARAM_INT);
 
@@ -951,7 +953,7 @@ function cms_get_visible_pages($menuid) {
 
     $sql = "
         SELECT
-            nd.pageid,
+            nd.id,
             nd.parentid,
             nd.title,
             nd.isfp,

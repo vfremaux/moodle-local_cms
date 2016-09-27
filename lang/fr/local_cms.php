@@ -12,6 +12,8 @@ $string['cms:movepage'] = 'Déplacer les pages';
 $string['cms:publishpage'] = 'Publier les pages';
 $string['cms:editmenu'] = 'Modifier les volumes';
 
+$string['eventcmspageviewed'] = 'Page CMS visitée';
+
 $string['actions'] = 'Actions';
 $string['addchild'] = 'Ajouter une page fille';
 $string['addnewmenu'] = 'Ajouter un volume';
@@ -30,12 +32,14 @@ $string['deletepage'] = 'Supprimer la page';
 $string['diff'] = 'Différence';
 $string['editmenu'] = 'Editer le volume';
 $string['editpage'] = 'Editer la page';
+$string['editortricks'] = 'Astuces d\'édition du CMS';
 $string['fetchback'] = 'Restaurer';
 $string['frontpagecms'] = 'Contenu CMS';
 $string['intro'] = 'Description';
 $string['isdefaultpage'] = 'Défaut';
 $string['lastmodified'] = 'Dernière mise à jour : {$a}';
-$string['linkname'] = 'Nom du lien';
+$string['lastmodifiedby'] = 'Dernière mise à jour : {$a->modified} par {$a->by}';
+$string['linkname'] = 'Nom du lien de menu';
 $string['linkto'] = 'Lier vers ...';
 $string['managemenus'] = 'Gérer les volumes';
 $string['managepages'] = 'Gérer les pages';
@@ -102,4 +106,26 @@ $string['pagediff'] = 'Comparaison de version';
 $string['cms_help'] = 'L\'extension CMS permet de construire des volumes (menus) dans lequel on bâtit des volumes arborescents de pages. Des blocs peuvent être positionnés
 dans les cours et peuvent être attachés à un des menus disponibles.';
 
+$string['editortricks_help'] = '
+    La syntaxe CMS Moodle veus permet d\'utiliser quelques macros pour enrichir vos pages de documentation :
+
+    [[pagename]] : Déclare l\'accès à une sous-page et permet de la créer si elle n\'existe pas. Le nom de la page doit être son titre visible. contrairement à un Wiki, ce titre 
+    n\'est pas nécessairement unique. Dans ce cas, seule une page du menu de pages courant peut être détectée.
+
+    [[pagename|alternatelabel]] : Identique au cas précédent, mais permet de changger le libellé apparent du lien.
+
+    [[TOC]] : Procure une table des matières développée à partir des pages enfant.
+
+    [[PARENT]] : Insère un lien vers la page parente de rang immédiatement supérieur..
+
+    [[PARENT|label]] : Identique au cas précédent, mais permet de modifier le libellé apparent.
+
+    [[PAGE pagename]] : Insère le contenu d\'une autre page (réutilisation).
+
+    [[PRIVATE string]] : Insère un texte privé uniquement visible par les personnes pouvant éditer la page.
+
+    [[NEWS]] : Insère le contneu du forum des nouvelles.
+
+    [[SCRIPT string]] : Expérimental.
+';
 

@@ -18,10 +18,10 @@
  * making a code diff of versions
  *
  * @package    local_cms
- * @author Moodle 1.9 Janne Mikkonen
- * @reauthor Moodle 2.x Valery Fremaux <valery.fremaux@gmail.com>
+ * @category   local
+ * @author     Moodle 1.9 Janne Mikkonen
+ * @author     Moodle 2.x Valery Fremaux <valery.fremaux@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @version: reviewed by MyLearningFactory (valery.fremaux@gmail.com)
  */
 /*
  * TODO:
@@ -39,9 +39,10 @@ if (!$course = $DB->get_record('course', array('id' => $courseid))) {
     print_error('coursmisconf');
 }
 
-require_login($course->id);
+// Security.
 
 confirm_sesskey();
+require_login($course->id);
 
 if ($courseid == SITEID) {
     $context = context_system::instance();

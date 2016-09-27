@@ -124,7 +124,7 @@ if (empty($pagedata)) {
 if ($course->id == SITEID) {
     $context = context_system::instance();
 } else {
-    $context = context_course::instance($courseid);
+    $context = context_course::instance($course->id);
 }
 
 // check accessibility by checking page menu state
@@ -136,11 +136,11 @@ if ($pagedata->requirelogin) {
         require_course_login($course);
     }
 
-    if (!$pagedata->allowguest && is_guest($context)) {
-        if ($courseid == SITEID) {
-            redirect(new moodle_url('/'));
-        } else {
-            redirect(new moodle_url('/course/view.php', array('id' => $courseid)));
+    if (!$pagedata->allowguest) {
+        if ($course->id != SITEID) {
+            if (is_guest($context)) {
+                redirect(new moodle_url('/course/view.php', array('id' => $courseid)));
+            }
         }
     }
 } else {
@@ -231,8 +231,18 @@ if (! empty($pagedata->requirelogin) &&
     $pagecontent = $renderer->render_page($pagedata, $course);
     echo $pagecontent;
 
-    if ( !empty($pagedata->printdate) ) {
-        echo '<p style="font-size: x-small;">'. get_string('lastmodified', 'local_cms', userdate($pagedata->modified)) .'</p>';
+    if (!empty($pagedata->printdate)) {
+        if ($pagedata->lastuserid) {
+            $lastuser = $DB->get_record('user', array('id' => $pagedata->lastuserid));
+            $e = new StdClass();
+            $e->by = fullname($lastuser);
+            $e->modified = userdate($pagedata->modified);
+            echo '<p style="font-size: x-small;">'. get_string('lastmodifiedby', 'local_cms', $e) .'</p>';
+        } else {
+            // This is just for handling old unassigned records
+            $modified = userdate($pagedata->modified);
+            echo '<p style="font-size: x-small;">'. get_string('lastmodified', 'local_cms', $modified) .'</p>';
+        }
     }
     if ($editing) {
         $stradmin = get_string('admin');
@@ -243,6 +253,9 @@ if (! empty($pagedata->requirelogin) &&
 }
 
 echo $OUTPUT->box_end();
+
+echo '</div>';
+
 if (!$embedded) {
     echo $OUTPUT->footer();
 }
