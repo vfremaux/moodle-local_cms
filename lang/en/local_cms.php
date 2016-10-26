@@ -12,6 +12,8 @@ $string['cms:editpage'] = 'Can edit pages';
 $string['cms:movepage'] = 'Can edit pages';
 $string['cms:publishpage'] = 'Publish pages';
 
+$string['eventcmspageviewed'] = 'CMS Page viewed';
+
 $string['actions'] = 'Actions';
 $string['addchild'] = 'Add child page';
 $string['addnewmenu'] = 'Add new menu';
@@ -30,6 +32,7 @@ $string['deletepage'] = 'Delete page';
 $string['diff'] = 'Diff';
 $string['editmenu'] = 'Edit menu';
 $string['editpage'] = 'Edit page';
+$string['editortricks'] = 'Editing special tricks';
 $string['errorcreatepage'] = 'Couldn\'t create new page!';
 $string['errorpagemenulink'] = 'Error while linking page to menu! Page has been removed.';
 $string['errorbadpage'] = 'Error retrieving CMS page!';
@@ -38,6 +41,7 @@ $string['frontpagecms'] = 'CMS content';
 $string['intro'] = 'Description';
 $string['isdefaultpage'] = 'Default';
 $string['lastmodified'] = 'Last modified: {$a}';
+$string['lastmodifiedby'] = 'Last modified: {$a->modified} by {$a->by}';
 $string['linkname'] = 'Link name';
 $string['linkto'] = 'Link to ...';
 $string['managemenus'] = 'Manage menus';
@@ -106,3 +110,25 @@ $string['cms_help'] = 'CMS builds menus in which you build a set of pages. Block
 $string['pagedeletesure'] = 'You\'re about to <strong>delete</strong> page <strong>{$a}</strong>!<br />
 NOTE! All child pages of <em>{$a}</em><br /> (if any exists) will also be deleted!<br /><br />
 Do you wish to continue?';
+
+$string['editortricks_help'] = '
+    The moodle cms syntax let you use some special placeholders to help building powerful documentations:
+    
+    [[pagename]] : Will let the cms engine behave as a Wiki and let you create the subpage.
+
+    [[pagename|alternatelabel]] : Same as above but he page name and visible link label are different.
+
+    [[TOC]] : Provides a full toc on child pages
+
+    [[PARENT]] : Provides alink to parent page using parent page title.
+
+    [[PARENT|label]] : Same as above but uses label string as visible link label.
+
+    [[PAGE pagename]] : Including another page\'s content (content reuse).
+
+    [[PRIVATE string]] : A string only visible for write only users
+
+    [[NEWS]] : Inserts the course news forum content.
+
+    [[SCRIPT string]] : Experimental.
+';

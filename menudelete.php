@@ -30,15 +30,14 @@ require_once($CFG->dirroot.'/local/cms/locallib.php');
 $id = required_param('id', PARAM_INT);       // menu id
 $courseid = optional_param('course', SITEID, PARAM_INT);
 
-require_login();
-
-confirm_sesskey();
-
 if (!$course = $DB->get_record('course', array('id' => $courseid))) {
     print_error('coursemisconf');
 }
 
-// Define context.
+// Security.
+
+require_login();
+confirm_sesskey();
 
 if ($courseid == SITEID) {
     $context = context_system::instance();

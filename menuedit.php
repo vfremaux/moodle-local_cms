@@ -18,10 +18,10 @@
  * for updating a menu
  *
  * @package    local_cms
- * @author Moodle 1.9 Janne Mikkonen
- * @reauthor Moodle 2.x Valery Fremaux <valery.fremaux@gmail.com>
+ * @category   local
+ * @author     Moodle 1.9 Janne Mikkonen
+ * @author     Moodle 2.x Valery Fremaux <valery.fremaux@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @version: reviewed by MyLearningFactory (valery.fremaux@gmail.com)
  */
 
 require('../../config.php');
@@ -31,15 +31,14 @@ require_once($CFG->dirroot.'/local/cms/forms/editmenu_form.php');
 $id = required_param('id', PARAM_INT);       // menu id
 $courseid = optional_param('course', SITEID, PARAM_INT);
 
-confirm_sesskey();
-
-require_login();
-
 if ( !$course = $DB->get_record('course', array('id' => $courseid)) ) {
     print_error('coursemisconf');
 }
 
-// Define context.
+// Security.
+
+confirm_sesskey();
+require_login();
 
 if ($courseid == SITEID ) {
     $context = context_system::instance();

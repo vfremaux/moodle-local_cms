@@ -14,18 +14,19 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * page editing table
  *
  * @package    local_cms
+ * @category
  * @author Moodle 1.9 Janne Mikkonen
- * @reauthor Moodle 2.x Valery Fremaux <valery.fremaux@gmail.com>
+ * @author Moodle 2.x Valery Fremaux <valery.fremaux@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @version: reviewed by MyLearningFactory (valery.fremaux@gmail.com)
  * TODO : Should be rewritten
  */
 
-defined('MOODLE_INTERNAL') or die('Direct access to this script is forbidden.');
 global $USER;
 
 $strpagetitle = get_string('page', 'local_cms');
@@ -51,10 +52,11 @@ $tbl->data  = array();
 //$tbl->data = cms_print_pages_menu(0, $menu->id, $courseid);
 $tbl->data = $themenu->get_page_tree_rows(0);
 
-echo "<form id=\"cmsPages\" name=\"cmsPages\" method=\"get\" action=\"pages.php\">";
-echo "<input type=\"hidden\" name=\"sesskey\" value=\"{$USER->sesskey}\" />";
-echo "<input type=\"hidden\" name=\"nid\" value=\"{$menu->id}\" />";
-echo "<input type=\"hidden\" name=\"course\" value=\"{$courseid}\" />";
+$pagesurl = new moodle_url('/local/cms/pages.php');
+echo '<form id="cmsPages" name="cmsPages" method="get" action="'.$pagesurl.'">';
+echo '<input type="hidden" name="sesskey" value="'.$USER->sesskey.'" />';
+echo '<input type="hidden" name="menuid" value="'.$menu->id.'" />';
+echo '<input type="hidden" name="course" value="'.$courseid.'" />';
 
 echo html_writer::table($tbl);
 

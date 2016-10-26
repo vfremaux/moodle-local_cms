@@ -14,16 +14,15 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * CMS display library
  *
  * @package    local_cms
+ * @category local
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-if (!defined('MOODLE_INTERNAL')) {
-    die('Direct access to this script is forbidden.');    ///  It must be included from a Moodle page
-}
 
 class local_cms_renderer extends plugin_renderer_base {
 
@@ -63,60 +62,7 @@ class local_cms_renderer extends plugin_renderer_base {
             "#\._\.#i" // escape string, to prevent recognition of special senquences
         );
 
-        function replace_handler($matches) {
-            global $PAGE, $COURSE, $SESSION;
-            static $renderer = null;
 
-            if ($COURSE->id > SITEID) {
-                $context = context_course::instance($COURSE->id);
-            } else {
-                $context = context_system::instance();
-            }
-
-            if (is_null($renderer)) {
-                // Optimization for numerous calls
-                $renderer = $PAGE->get_renderer('local_cms');
-            }
-
-            $fullpattern = $matches[0];
-            if (preg_match('#\[\[INCLUDE (.+?)\]\]#i', $fullpattern)) {
-                return $renderer->safe_include("$matches[1]", true);
-            } elseif (preg_match('#\[\[SCRIPT (.+?)\]\]#i', $fullpattern)) {
-                return $renderer->include_page("$matches[1]", false);
-            } elseif (preg_match('#\[\[PAGE (.+?)\]\]#i', $fullpattern)) {
-                return $renderer->include_page("$matches[1]", $COURSE);
-            } elseif (preg_match('#\[\[NEWS\]\]#i', $fullpattern)) {
-                return $renderer->news($COURSE);
-            } elseif (preg_match('#\[\[PRIVATE (.+?)\]\]#is', $fullpattern)) {
-                return '';
-            } elseif (preg_match('#\[\[TOC\]\]#i', $fullpattern)) {
-                return $renderer->toc($SESSION->currentcmspage);
-            } elseif (preg_match('#\[\[PARENT\]\]#i', $fullpattern)) {
-                return $renderer->parent_link($SESSION->currentcmspage);
-            } elseif (preg_match('#\[\[PARENT\|(.+?)\]\]#i', $fullpattern, $matches)) {
-                return $renderer->parent_link($SESSION->currentcmspage, $matches[1]);
-            } elseif (preg_match('#\[\[([^\[\]]+?)\s*\|\s*(.+?)\]\]#s', $fullpattern)) {
-                return html_writer::link(@$matches[1] ,@$matches[2]);
-            } elseif (preg_match('#\[\[(.+?)\]\]#s', $fullpattern, $matches)) {
-                $pagename = @$matches[1];
-                if ($page = cms_get_page_data($COURSE->id, $SESSION->currentcmsmenu, $pagename)) {
-                    $pageurl = new moodle_url('/local/cms/view.php', array('pid' => $page->id));
-                    return html_writer::link($pageurl, $pagename);
-                } else {
-                    if (has_capability('local/cms:editpage', $context)) {
-                        $params = array('id' => $SESSION->currentcmsmenu, 'course' => $COURSE->id, 'pagename' => $pagename, 'sesskey' => sesskey(), 'parentid' => $SESSION->currentcmspage);
-                        $addpageurl = new moodle_url('/local/cms/pageadd.php', $params);
-                        return '<span class="local-cms-not-exists">'.$pagename.'</span><a href="'.$addpageurl.'">?</a>';
-                    } else {
-                        return '<span class="local-cms-not-exists">'.$pagename.'</span>';
-                    }
-                }
-            } elseif (preg_match('#\._\.#i', $fullpattern)) {
-                return '';
-            }
-            return '';
-        }
-    
         $body = preg_replace_callback($search, 'replace_handler', $pagedata->body);
         $body = file_rewrite_pluginfile_urls($body, 'pluginfile.php', $context->id, 'local_cms', 'body', $pagedata->id);
     
@@ -218,6 +164,10 @@ class local_cms_renderer extends plugin_renderer_base {
                 $toolbar .= ' <a href="'.$editmenuurl.'"><img src="'.$editmenuicon.'" width="11" '.'height="11" alt="'.$streditmenus.'" title="'.$streditmenus.'" border="0" /></a>';
             }
 
+            if (has_capability('local/cms:editpage', $context)) {
+                $toolbar .= $OUTPUT->help_icon('editortricks', 'local_cms');
+            }
+
             if ( !empty($toolbar) ) {
                 $toolbar = '<div class="cms-frontpage-toolbar">'.$toolbar.'</div>'."\n";
             }
@@ -287,12 +237,14 @@ class local_cms_renderer extends plugin_renderer_base {
     function toc($pid) {
         global $DB;
 
+        $page = $DB->get_record('local_cms_navi_data', array('id' => $pid));
+
         $return = '';
-        if ($navidatas = $DB->get_records('local_cms_navi_data', array('parentid' => $pid), 'sortorder ASC')) {
+        if ($navidatas = $DB->get_records('local_cms_navi_data', array('parentid' => $pid, 'naviid' => $page->naviid), 'sortorder ASC')) {
             $return .= '<ul>';
             foreach ($navidatas as $navidata) {
                 if ($navidata->showinmenu) {
-                    $pageurl = new moodle_url('/local/cms/view.php', array('page' => $navidata->pagename));
+                    $pageurl = new moodle_url('/local/cms/view.php', array('pid' => $navidata->id));
                     $return .= '<li><a href="'.$pageurl.'">'.$navidata->title.'</a></li>';
                 }
             }
@@ -330,7 +282,7 @@ class local_cms_renderer extends plugin_renderer_base {
     
         if ($str = file_get_contents($url)) {
             if ($setbase) {
-                $str = '<base href="'.$url.'" />'.$str.'<base href="'.$CFG->wwwroot.'/cms/" />';
+                $str = '<base href="'.$url.'" />'.$str.'<base href="'.$CFG->wwwroot.'/local/cms/" />';
             }
         }
 
@@ -342,7 +294,7 @@ class local_cms_renderer extends plugin_renderer_base {
 
         $str = '';
 
-        $path[format_string($navidata->title)] = $CFG->wwwroot.'/local/cms/view.php?page='.$navidata->pagename;
+        $path[format_string($navidata->title)] = new moodle_url('/local/cms/view.php', array('page' => $navidata->pagename));
 
         if ($navidata->parentid) {
             if (!$parent = $DB->get_record('local_cms_navi_data', array('pageid' => $navidata->parentid), 'title, pagename, parentid')) {
@@ -520,7 +472,6 @@ class local_cms_renderer extends plugin_renderer_base {
     function update_page_button($pageid, $context) {
         global $CFG, $USER;
 
-        print_object($context);
         if (has_capability('local/cms:editpage', $context, $USER->id, true)) {
             $string = get_string('updatepage', 'local_cms');
             $url = new moodle_url('/local/cms/view.php', array('pid' => $pageid, 'edit' => 1, 'sesskey' => sesskey(), 'courseid' => $context->instanceid));
@@ -529,5 +480,61 @@ class local_cms_renderer extends plugin_renderer_base {
             return '';
         }
     }
+}
 
+/**
+ * Makes all replacements in page body
+ */
+function replace_handler($matches) {
+    global $PAGE, $COURSE, $SESSION;
+    static $renderer = null;
+
+    if ($COURSE->id > SITEID) {
+        $context = context_course::instance($COURSE->id);
+    } else {
+        $context = context_system::instance();
+    }
+
+    if (is_null($renderer)) {
+        // Optimization for numerous calls
+        $renderer = $PAGE->get_renderer('local_cms');
+    }
+
+    $fullpattern = $matches[0];
+    if (preg_match('#\[\[INCLUDE (.+?)\]\]#i', $fullpattern)) {
+        return $renderer->safe_include("$matches[1]", true);
+    } elseif (preg_match('#\[\[SCRIPT (.+?)\]\]#i', $fullpattern)) {
+        return $renderer->include_page("$matches[1]", false);
+    } elseif (preg_match('#\[\[PAGE (.+?)\]\]#i', $fullpattern)) {
+        return $renderer->include_page("$matches[1]", $COURSE);
+    } elseif (preg_match('#\[\[NEWS\]\]#i', $fullpattern)) {
+        return $renderer->news($COURSE);
+    } elseif (preg_match('#\[\[PRIVATE (.+?)\]\]#is', $fullpattern)) {
+        return '';
+    } elseif (preg_match('#\[\[TOC\]\]#i', $fullpattern)) {
+        return $renderer->toc($SESSION->currentcmspage);
+    } elseif (preg_match('#\[\[PARENT\]\]#i', $fullpattern)) {
+        return $renderer->parent_link($SESSION->currentcmspage);
+    } elseif (preg_match('#\[\[PARENT\|(.+?)\]\]#i', $fullpattern, $matches)) {
+        return $renderer->parent_link($SESSION->currentcmspage, $matches[1]);
+    } elseif (preg_match('#\[\[([^\[\]]+?)\s*\|\s*(.+?)\]\]#s', $fullpattern)) {
+        return html_writer::link(@$matches[1] ,@$matches[2]);
+    } elseif (preg_match('#\[\[(.+?)\]\]#s', $fullpattern, $matches)) {
+        $pagename = @$matches[1];
+        if ($page = cms_get_page_data($COURSE->id, $SESSION->currentcmsmenu, $pagename)) {
+            $pageurl = new moodle_url('/local/cms/view.php', array('pid' => $page->id));
+            return html_writer::link($pageurl, $pagename);
+        } else {
+            if (has_capability('local/cms:editpage', $context)) {
+                $params = array('nid' => $SESSION->currentcmsmenu, 'course' => $COURSE->id, 'pagename' => $pagename, 'sesskey' => sesskey(), 'parentid' => $SESSION->currentcmspage);
+                $addpageurl = new moodle_url('/local/cms/pageadd.php', $params);
+                return '<span class="local-cms-not-exists">'.$pagename.'</span><a href="'.$addpageurl.'">?</a>';
+            } else {
+                return '<span class="local-cms-not-exists">'.$pagename.'</span>';
+            }
+        }
+    } elseif (preg_match('#\._\.#i', $fullpattern)) {
+        return '';
+    }
+    return '';
 }

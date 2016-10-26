@@ -34,15 +34,14 @@ $version = optional_param('version', 0, PARAM_INT);
 
 $originalpage = cms_get_page_data_from_id($id);
 
-confirm_sesskey();
-
 if (!$course = $DB->get_record('course', array('id' => $courseid))) {
     print_error('coursemisconf');
 }
 
-require_login($course->id);
+// Security.
 
-// Define context for page.
+confirm_sesskey();
+require_login($course->id);
 
 if ($originalpage->course == SITEID || $originalpage->course == 0) {
     $context = context_system::instance();
@@ -135,6 +134,7 @@ if ($fromform = $pageform->get_data()) { // Save button has been pressed
 
         // Update page first.
         $updatedpage->modified = time();
+        $updatedpage->lastuserid = $USER->id;
 
         // Pre process files.
         $body_draftid_editor = file_get_submitted_draft_itemid('body');

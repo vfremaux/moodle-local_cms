@@ -14,11 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
- * @package local_cms
- * @category local
- * @date 27/09/2009
- * @version: reviewed by MyLearningFactory (valery.fremaux@gmail.com)
+ * @package    local_cms
+ * @category   local
+ * @author     Moodle 1.9 Janne Mikkonen
+ * @author     Moodle 2.x Valery Fremaux <valery.fremaux@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
  * This is a special script for hooking the Moodle index page. 
  * It adds a sideway to standard index when subnavigating to 
@@ -55,7 +58,7 @@ if (!$pagename = optional_param('page', '', PARAM_FILE)) {
          */
         $relativepath = get_file_argument(basename($_SERVER['SCRIPT_FILENAME']));
         if (preg_match('#^'.$cmsconfig->virtual_path.'/(.*)#i', $relativepath, $matches)) {
-            redirect(new moodle_url('/local/cms/view.php', array('page' => $matches[1]));
+            redirect(new moodle_url('/local/cms/view.php', array('page' => $matches[1])));
         }
         unset($args, $relativepath);
     }
