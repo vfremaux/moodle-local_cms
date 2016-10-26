@@ -18,8 +18,9 @@
  * CMS administration index page for site/course level.
  *
  * @package    local_cms
- * @author Moodle 1.9 Janne Mikkonen
- * @reauthor Moodle 2.x Valery Fremaux <valery.fremaux@gmail.com>
+ * @category   local
+ * @author     Moodle 1.9 Janne Mikkonen
+ * @author     Moodle 2.x Valery Fremaux <valery.fremaux@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -27,8 +28,7 @@ require('../../config.php');
 
 $courseid = optional_param('course', SITEID, PARAM_INT);
 
-// Check for valid admin user.
-
+// Security.
 require_login($courseid);
 
 if ( !$course = $DB->get_record('course', array('id' => $courseid)) ) {

@@ -15,13 +15,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * 
- *
  * @package    local_cms
- * @author Moodle 1.9 Janne Mikkonen
- * @reauthor Moodle 2.x Valery Fremaux <valery.fremaux@gmail.com>
+ * @category   local
+ * @author     Moodle 1.9 Janne Mikkonen
+ * @author     Moodle 2.x Valery Fremaux <valery.fremaux@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @version: reviewed by MyLearningFactory (valery.fremaux@gmail.com)
  */
 
 require_once('../../config.php');
@@ -29,7 +27,7 @@ include_once($CFG->dirroot.'/local/cms/locallib.php');
 
 $courseid = required_param('course', PARAM_INT);
 
-// Require login
+// Security.
 require_login();
 
 confirm_sesskey();

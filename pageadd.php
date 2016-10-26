@@ -18,10 +18,10 @@
  * For adding a page
  *
  * @package    local_cms
- * @author Moodle 1.9 Janne Mikkonen
- * @reauthor Moodle 2.x Valery Fremaux <valery.fremaux@gmail.com>
+ * @category   local
+ * @author     Moodle 1.9 Janne Mikkonen
+ * @author     Moodle 2.x Valery Fremaux <valery.fremaux@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @version: reviewed by MyLearningFactory (valery.fremaux@gmail.com)
  */
 
 require('../../config.php');
@@ -33,15 +33,14 @@ require_once($CFG->dirroot.'/local/cms/forms/editpage_form.php');
 $menuid = required_param('nid', PARAM_INT); // Menu id
 $courseid = optional_param('course', SITEID, PARAM_INT);
 
-confirm_sesskey();
-
 if (!$course = $DB->get_record('course', array('id' => $courseid))) {
     print_error('coursemisconf');
 }
 
-require_login($courseid);
+// Security.
 
-// Define context.
+confirm_sesskey();
+require_login($courseid);
 
 $menu = $DB->get_record('local_cms_navi', array('id' => $menuid));
 if (($menu->course == SITEID) || ($menu->course == 0)) {
@@ -82,6 +81,7 @@ if ($fromform = $pageform->get_data()) {
         $newpage = new StdClass();
         $newpage->created  = time();
         $newpage->modified = time();
+        $newpage->lastuserid = $USER->id;
         $newpage->body = $fromform->body['text'];
         $newpage->bodyformat = $fromform->body['format']; // fakes as not really recorded
 
@@ -201,6 +201,7 @@ $formdata->what = 'add';
 $formdata->id = 0; // new page
 $formdata->pid = 0; // new page
 $formdata->nid = $menuid; // current menu
+$formdata->naviid = $menuid; // current menu select
 $formdata->course = $courseid; // current course context
 $formdata->parentid = optional_param('parentid', 0, PARAM_INT);
 $formdata->body = '';

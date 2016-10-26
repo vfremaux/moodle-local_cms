@@ -18,10 +18,10 @@
  * page administration in a menu
  *
  * @package    local_cms
- * @author Moodle 1.9 Janne Mikkonen
- * @reauthor Moodle 2.x Valery Fremaux <valery.fremaux@gmail.com>
+ * @category   local
+ * @author     Moodle 1.9 Janne Mikkonen
+ * @author     Moodle 2.x Valery Fremaux <valery.fremaux@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @version: reviewed by MyLearningFactory (valery.fremaux@gmail.com)
  */
 require('../../config.php');
 require_once $CFG->dirroot.'/local/cms/locallib.php';
@@ -31,22 +31,19 @@ $menuid = optional_param('menuid', 1, PARAM_INT);    //
 $courseid = optional_param('course', SITEID, PARAM_INT); // only for return and access check
 $setfrontpage = optional_param('setfp', 0, PARAM_INT);
 
-confirm_sesskey();
-
 if (!$course = $DB->get_record('course', array('id' => $courseid)) ) {
     print_error('coursemisconf');
 }
 
+// Security.
+confirm_sesskey();
 require_login($courseid);
 
 if (!$menu = $DB->get_record('local_cms_navi', array('id' => $menuid))) {
     redirect(new moodle_url('/local/cms/menus.php', array('course' => $courseid, 'sesskey' => sesskey())));
 }
 
-// Define context.
-
 $contextinstance = null;
-$context = null;
 if ($menu->course == SITEID) {
     $context = context_system::instance();
 } else {
@@ -69,13 +66,13 @@ $PAGE->navbar->add($strpages);
 if ( !empty($setfrontpage) && has_capability('local/cms:editpage', $context) ) {
 
     $sql = "
-        SELECT 
-            nd.id 
+        SELECT
+            nd.id
         FROM
-            {local_cms_navi_data} AS nd, 
+            {local_cms_navi_data} AS nd,
             {local_cms_navi} AS n
-        WHERE 
-            nd.naviid = n.id AND 
+        WHERE
+            nd.naviid = n.id AND
             n.id = ? AND
             nd.isfp = 1
     ";

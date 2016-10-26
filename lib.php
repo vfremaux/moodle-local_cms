@@ -14,16 +14,18 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * This file contains necessary functions to output
  * cms content on site or course level.
  *
- * @author Janne Mikkonen
+ * @package    local_cms
+ * @category   local
+ * @author     Moodle 1.9 Janne Mikkonen
  * @author Gustav Delius
- * @author Valery Fremaux (valery.fremaux@gmail.com)
- * @license http://www.gnu.org/copyleft/gpl.html GNU Public License
- * @version: reviewed by MyLearningFactory (valery.fremaux@gmail.com)
- * @package local_cms
+ * @author     Moodle 2.x Valery Fremaux <valery.fremaux@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 /**
