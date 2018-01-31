@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * local librairies
  *
@@ -25,13 +23,14 @@ defined('MOODLE_INTERNAL') || die();
  * @author     Moodle 2.x Valery Fremaux <valery.fremaux@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/local/cms/lib.php');
 
 function cms_get_page_data_by_id($courseidfoo, $pageid) {
     global $CFG, $DB;
 
-    // Fetch pagedata from the database
+    // Fetch pagedata from the database.
 
     if (intval($pageid) != $pageid) {
         return false;
@@ -176,19 +175,19 @@ function cms_get_navi($parentid, $menuid = 1) {
     $parentid = intval($parentid);
 
     $sql  = "
-        SELECT 
-            n.*, 
+        SELECT
+            n.*,
             p.publish,
-            cn.requirelogin 
+            cn.requirelogin
         FROM 
             {local_cms_navi_data} n,
             {local_cms_pages} p,
             {local_cms_navi} cn
         WHERE 
-            n.pageid = p.id AND 
-            p.publish = 1 AND 
-            n.naviid = ? AND 
-            cn.id = ? AND 
+            n.pageid = p.id AND
+            p.publish = 1 AND
+            n.naviid = ? AND
+            cn.id = ? AND
             n.parentid = ?
     ";
 
@@ -215,7 +214,12 @@ function cms_get_possible_parents($menuid, $navidataid) {
             $list = implode("','", array_values($children));
         }
 
-        return $DB->get_records_select('local_cms_navi_data', " naviid = ? AND id NOT IN ('{$list}') AND id != $navidataid ", array($menuid));
+        $select = "
+            naviid = ? AND
+            id NOT IN ('{$list}') AND
+            id != $navidataid
+        ";
+        return $DB->get_records_select('local_cms_navi_data', $select, array($menuid));
 
     } else {
 
@@ -290,14 +294,14 @@ function cms_reset_menu_order ($parentid, $menuid) {
     }
 
     $sql = "
-        SELECT 
-            id, 
-            pageid, 
+        SELECT
+            id,
+            pageid,
             parentid
         FROM 
             {local_cms_navi_data}
-        WHERE 
-            parentid = ? AND 
+        WHERE
+            parentid = ? AND
             naviid = ?
     ";
 

@@ -31,7 +31,7 @@ $courseid = optional_param('course', SITEID, PARAM_INT);
 // Security.
 require_login($courseid);
 
-if ( !$course = $DB->get_record('course', array('id' => $courseid)) ) {
+if (!$course = $DB->get_record('course', array('id' => $courseid))) {
     print_error('coursemisconf');
 }
 
@@ -69,23 +69,23 @@ echo $OUTPUT->heading_with_help($strcms . ' '. $stradministration, 'cms', 'local
 echo '<table border="0" cellpadding="4" cellspacing="2">';
 echo '<tr>';
 echo '<td align="center">';
-if ( has_capability('local/cms:createmenu', $context, $USER->id) ) {
+if (has_capability('local/cms:createmenu', $context, $USER->id)) {
     $menusurl = new moodle_url('/local/cms/menus.php', array('course' => $courseid, 'sesskey' => sesskey()));
     echo '<a href="'.$menusurl.'">';
-    echo '<img src="'.$OUTPUT->pix_url('menus', 'local_cms').'" width="50" height="50" alt="'.$strmanagemenus.'"
-    title="'.$strmanagemenus.'" border="0" /></a><br />';
+    $pixurl = $OUTPUT->pix_url('menus', 'local_cms');
+    echo '<img src="'.$pixurl.'" width="50" height="50" alt="'.$strmanagemenus.'" title="'.$strmanagemenus.'" border="0" /></a><br />';
     echo '<a href="'.$menusurl.'">'.$strmanagemenus.'</a>';
 } else {
     echo "&nbsp;";
 }
-        
+
 echo '</td>';
 echo '<td align="center">';
 if ( has_capability('local/cms:publishpage', $context, $USER->id) or has_capability('local/cms:createpage', $context, $USER->id) ) {
     $pagesurl = new moodle_url('/local/cms/pages.php', array('course' => $courseid, 'sesskey' => sesskey()));
     echo '<a href="'.$pagesurl.'">';
-    echo '<img src="'.$OUTPUT->pix_url('pages', 'local_cms').'" width="50" height="50" alt="'.$strmanagepages.'"
-    title="'.$strmanagepages.'" /></a><br />';
+    $pixurl = $OUTPUT->pix_url('pages', 'local_cms');
+    echo '<img src="'.$pixurl.'" width="50" height="50" alt="'.$strmanagepages.'" title="'.$strmanagepages.'" /></a><br />';
     echo '<a href="'.$pagesurl.'">'.$strmanagepages.'</a>';
 } else {
     echo "&nbsp;";

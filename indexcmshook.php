@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * @package    local_cms
  * @category   local
@@ -27,6 +25,7 @@ defined('MOODLE_INTERNAL') || die();
  * It adds a sideway to standard index when subnavigating to 
  * a virtual cms subdir.
  */
+defined('MOODLE_INTERNAL') || die();
 
 // Pre defines if not initialized.
 
@@ -37,8 +36,10 @@ if (empty($cmsconfig->virtual_path)) {
     set_config('virtual_path', '/documentation', 'local_cms');
 }
 
-// capture pid param and redirect.
-// this cause proper URL to be used to access the documentation page.
+/*
+ * Capture pid param and redirect.
+ * this cause proper URL to be used to access the documentation page.
+ */
 
 if ($pid = optional_param('pid', '', PARAM_INT)) {
     $page = $DB->get_record('local_cms_navi_data', array('pageid' => $pid));
@@ -49,7 +50,7 @@ if ($pid = optional_param('pid', '', PARAM_INT)) {
     }
 }
 
-// get pagename.
+// Get pagename.
 
 if (!$pagename = optional_param('page', '', PARAM_FILE)) {
     if ($CFG->slasharguments) {
@@ -64,18 +65,18 @@ if (!$pagename = optional_param('page', '', PARAM_FILE)) {
     }
 }
 
-// last case is if frontpage format is set to CMS format.
+// Last case is if frontpage format is set to CMS format.
  
-if (isloggedin() and !isguestuser() and isset($CFG->frontpageloggedin)) {
+if (isloggedin() && !isguestuser() && isset($CFG->frontpageloggedin)) {
     $frontpagelayout = $CFG->frontpageloggedin;
 } else {
     $frontpagelayout = $CFG->frontpage;
 }
 
-if ( $frontpagelayout == FRONTPAGECMS or !empty($pagename) ) {
+if ($frontpagelayout == FRONTPAGECMS or !empty($pagename)) {
     $courseid = optional_param('id', SITEID, PARAM_INT);
     require_once($CFG->dirroot .'/local/cms/view.php');
     die;
 }
 
-// let continue normally if no sidehook has been catched.
+// Let continue normally if no sidehook has been catched.
