@@ -25,12 +25,12 @@
  */
 
 require('../../config.php');
-require($CFG->dirroot.'/local/cms/locallib.php');
+require_once($CFG->dirroot.'/local/cms/locallib.php');
 
 $pageid   = required_param('pageid', PARAM_INT);
 $courseid = required_param('course', PARAM_INT);
 
-if (!$course = $DB->get_record('course', array('id' => $courseid)) ) {
+if (!$course = $DB->get_record('course', array('id' => $courseid))) {
     print_error('coursemisconf');
 }
 
@@ -55,7 +55,7 @@ $PAGE->set_title($historystr);
 
 echo $OUTPUT->header();
 
-if ( $pagedata = $DB->get_record('local_cms_pages_history', array('id' => $pageid)) ) {
+if ($pagedata = $DB->get_record('local_cms_pages_history', array('id' => $pageid))) {
     $options = new stdClass;
     $options->noclean = true;
     echo format_text($pagedata->content, FORMAT_HTML, $options);
