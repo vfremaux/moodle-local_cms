@@ -362,9 +362,9 @@ class local_cms_renderer extends plugin_renderer_base {
             $strrequirelogin = get_string('requirelogin','local_cms');
             $strallowguest   = get_string('allowguest','local_cms');
             $keypix = $OUTPUT->pix_url('key', 'local_cms');
-            $imgrlogin = '<img src="'.$keypix.'" width="16" height="16" alt="'. $strrequirelogin .'"'.' title="'. $strrequirelogin .'" />';
+            $imgrlogin = '<img src="'.$keypix.' width="16" height="16" alt="'. $strrequirelogin .'"'.' title="'. $strrequirelogin .'" />';
             $guestpix = $OUTPUT->pix_url('guest', 'local_cms');
-            $imgallowguest = '<img src="'.$guestpix.'" width="16" height="16" alt="'. $strallowguest .'"' .' title="'. $strallowguest .'" />';
+            $imgallowguest = '<img src="'.$guestpix.' width="16" height="16" alt="'. $strallowguest .'"' .' title="'. $strallowguest .'" />';
 
             $tbl->head = array($strname, $stractions, $strintro,$strcreated, $strmodified, $imgrlogin, $imgallowguest);
 
@@ -442,7 +442,7 @@ class local_cms_renderer extends plugin_renderer_base {
 
         // Prepare navigation to all menus in same context.
         $menus = $DB->get_records('local_cms_navi', array('course' => $menu->course), 'name');
-
+    
         include_once($CFG->dirroot.'/local/cms/html/navimenu.php');
         include_once($CFG->dirroot.'/local/cms/html/pagesindex.php');
     }

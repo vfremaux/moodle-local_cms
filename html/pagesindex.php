@@ -38,7 +38,6 @@ $strversion   = get_string('version');
 $strmodified  = get_string('modified');
 
 $themenu = new cms_pages_menu($menu->id, $courseid);
-$haspages = count($themenu->pages);
 $tbl = new html_table;
 
 $tbl->head = array('', '', $strpagetitle, '', $strpublish, $strmenu, $strversion, $strmodified);
@@ -76,13 +75,11 @@ print '</noscript>';*/
 if ( has_capability('local/cms:createpage', $context, $USER->id) ) {
     echo '<input type="submit" name="add" value="'. get_string('add') .'" />'."\n";
 }
-if ($haspages) {
-    if ( has_capability('local/cms:editpage', $context, $USER->id) ) {
-        echo '<input type="submit" name="edit" value="'. get_string('edit') .'" />'."\n";
-    }
-    if ( has_capability('local/cms:deletepage', $context, $USER->id) ) {
-        echo '<input type="submit" name="purge" value="'. get_string('delete') .'"/>'."\n";
-    }
+if ( has_capability('local/cms:editpage', $context, $USER->id) ) {
+    echo '<input type="submit" name="edit" value="'. get_string('edit') .'" />'."\n";
+}
+if ( has_capability('local/cms:deletepage', $context, $USER->id) ) {
+    echo '<input type="submit" name="purge" value="'. get_string('delete') .'"/>'."\n";
 }
 
 echo '</form>' . "\n";
