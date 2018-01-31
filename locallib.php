@@ -328,82 +328,82 @@ class cms_pages_menu {
     * Array container for pages
     * @var array $pages
     */
-    public $pages = NULL;
+    var $pages = NULL;
     /**
     * Menu id
     * @var int $menuid
     */
-    public $menuid = NULL;
+    var $menuid = NULL;
     /**
     * Course id
     * @var int $courseid
     */
-    public $courseid = NULL;
+    var $courseid = NULL;
     /**
     * String holder for image up on pages index.
     * @var string $imgup
     */
-    public $imgup = NULL;
+    var $imgup = NULL;
     /**
     * String holder for image down on pages index.
     * @var string $imgdown
     */
-    public $imgdown;
+    var $imgdown;
     /**
     * String holder for image right on pages index.
     * @var string $imgright
     */
-    public $imgright;
+    var $imgright;
     /**
     * String holder for image left on pages index.
     * @var string $imgleft
     */
-    public $imgleft;
+    var $imgleft;
     /**
     * String holder for publish image on pages index.
     * @var string $imgpub
     */
-    public $imgpub;
+    var $imgpub;
     /**
     * String holder for unpublish image on pages index.
     * @var string $imgunpub
     */
-    public $imgunpub;
+    var $imgunpub;
     /**
     * String holder for blank image on pages index.
     * @var string $imgblank
     */
-    public $imgblank;
+    var $imgblank;
     /**
     * Language string for default page.
     * @var string $strisdefault
     */
-    public $strisdefault;
+    var $strisdefault;
     /**
     * Language string for set as default page.
     * @var string $strsetasdefault
     */
-    public $strsetasdefault;
+    var $strsetasdefault;
     /**
     * Language string for published.
     * @var string $strpublished
     */
-    public $strpublished;
+    var $strpublished;
     /**
     * Language string for unpublished.
     * @var string $strunpublished
     */
-    public $strunpublished;
+    var $strunpublished;
     /**
     * Site container.
     * @var object $site
     */
-    public $siteid;
+    var $siteid;
     /**
     * wwwroot for internal use.
     * @var string $wwwroot
     */
-    public $wwwroot;
+    var $wwwroot;
 
     /**
     * Constructor sets up needed variables and
@@ -460,7 +460,6 @@ class cms_pages_menu {
                 n.parentid,
                 n.url,
                 n.target,
-                n.showinmenu,
                 p.publish,
                 p.created,
                 p.modified
@@ -616,21 +615,11 @@ class cms_pages_menu {
 
                     $row[] = '<input type="checkbox" name="id" value="'.$p->id .'" />';
 
-                    $params = array('sesskey' => sesskey(),
-                                    'sort' => 'up',
-                                    'menuid' => $p->naviid,
-                                    'pid' => $p->id,
-                                    'mid' => $p->parentid,
-                                    'course' => $this->courseid);
+                    $params = array('sesskey' => sesskey(), 'sort' => 'up', 'menuid' => $p->naviid, 'pid' => $p->id, 'mid' => $p->parentid, 'course' => $this->courseid);
                     $url = new moodle_url('/local/cms/pages.php', $params);
                     $hrefup = '<a href="'.$url.'">'.$this->imgup .'</a>';
 
-                    $params = array('sesskey' => sesskey(),
-                                    'sort' => 'down',
-                                    'menuid' => $p->naviid,
-                                    'pid' => $p->id,
-                                    'mid' => $p->parentid,
-                                    'course' => $this->courseid);
+                    $params = array('sesskey' => sesskey(), 'sort' => 'down', 'menuid' => $p->naviid, 'pid' => $p->id, 'mid' => $p->parentid, 'course' => $this->courseid);
                     $url = new moodle_url('/local/cms/pages.php', $params);
                     $hrefdown = '<a href="'.$url.'">'.$this->imgdown .'</a>';
 
@@ -640,30 +629,22 @@ class cms_pages_menu {
                         if ( empty($moveto) ) {
                             $moveto = '0';
                         }
-                        $params = array('sesskey' => sesskey(),
-                                        'move' => $moveto,
-                                        'pid' => $p->id,
-                                        'menuid' => $p->naviid,
-                                        'course' => $this->courseid);
+                        $params = array('sesskey' => sesskey(), 'move' => $moveto, 'pid' => $p->id, 'menuid' => $p->naviid, 'course' => $this->courseid);
                         $url = new moodle_url('/local/cms/pages.php', $params);
                         $hrefleft = '<a href="'.$url.'" alt="">'. $this->imgleft .'</a>';
                     }
 
                     $hrefright = '';
                     if ( !empty($prevpage->id) ) {
-                        $params = array('sesskey' => sesskey(),
-                                        'move' => $prevpage->id,
-                                        'pid' => $p->id,
-                                        'menuid' => $p->naviid,
-                                        'course' => $this->courseid);
+                        $params = array('sesskey' => sesskey(), 'move' => $prevpage->id, 'pid' => $p->id, 'menuid' => $p->naviid, 'course' => $this->courseid);
                         $url = new moodle_url('/local/cms/pages.php', $params);
                         $hrefright  = '<a href="'.$url.'" alt="">'. $this->imgright .'</a>';
                     }
 
                     $moverow = '<table border="0" cellpadding="2"><tr>';
 
-                    if ($this->__firstAtLevel($p->parentid, $p->id) &&
-                         $this->__hasSibling($p->parentid)) {
+                    if ( $this->__firstAtLevel($p->parentid, $p->id) &&
+                         $this->__hasSibling($p->parentid) ) {
                         $moverow .= '<td>'. $hrefdown .'</td><td>'. $this->imgblank .'</td>';
                     } else if ( $this->__lastAtLevel($p->parentid, $p->id) &&
                                 $this->__hasSibling($p->parentid) ) {
@@ -675,12 +656,12 @@ class cms_pages_menu {
                     }
 
                     // Add level changers.
-                    if ($this->__hasParent($p->id)) {
+                    if ( $this->__hasParent($p->id) ) {
                         $moverow .= '<td>'. $hrefleft .'</td>';
                     } else {
                         $moverow .= '<td>'. $this->imgblank .'</td>';
                     }
-                    if ($this->__hasSibling($p->parentid) && !$this->__firstAtLevel($p->parentid, $p->id)) {
+                    if ( $this->__hasSibling($p->parentid) && !$this->__firstAtLevel($p->parentid, $p->id) ) {
                         $moverow .= '<td>'. $hrefright .'</td>';
                     }
 
@@ -692,7 +673,7 @@ class cms_pages_menu {
                     }
 
                     // If link is a direct url to resource or webpage
-                    if (!empty($p->url)) {
+                    if ( !empty($p->url) ) {
                         $pageurl = $p->url;
                     }
 
