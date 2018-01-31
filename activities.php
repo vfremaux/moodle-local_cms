@@ -23,7 +23,7 @@
  */
 
 require_once('../../config.php');
-include_once($CFG->dirroot.'/local/cms/locallib.php');
+require_once($CFG->dirroot.'/local/cms/locallib.php');
 
 $courseid = required_param('course', PARAM_INT);
 
@@ -38,7 +38,7 @@ if ( !$course = $DB->get_record('course', array('id' => $courseid)) ) {
 
 // Get a proper context.
 
-if ( empty($courseid) ) {
+if (empty($courseid)) {
     $courseid = SITEID;
     $context = context_system::instance();
 } else {
@@ -49,7 +49,7 @@ require_capability('local/cms:editpage', $context);
 // Print page header.
 
 $strcms = get_string('cms', 'local_cms');
-$stractres = get_string('activities') .'/'. get_string('resources');
+$stractres = get_string('activities').'/'.get_string('resources');
 $stradministration = get_string('administration');
 
 $url = new moodle_url('/local/cms/activities.php', array('course' => $courseid));
@@ -57,7 +57,8 @@ $PAGE->set_url($url);
 $PAGE->set_context($context);
 $PAGE->set_title($straddnew);
 $PAGE->set_heading($straddnew);
-$PAGE->navbar->add($strcms.' '.$stradministration, new moodle_url('/index.php', array('course' => $course->id, 'sesskey' => $USER->sesskey)));
+$params = array('course' => $course->id, 'sesskey' => sesskey());
+$PAGE->navbar->add($strcms.' '.$stradministration, new moodle_url('/index.php', $params));
 $PAGE->navbar->add($stractres);
 $PAGE->requires->js('/local/cms/js/cms.js');
 
@@ -76,13 +77,13 @@ $table->cellpadding = 2;
 $table->data = array();
 
 $modinfo = unserialize($course->modinfo);
-if ( !empty($modinfo) ) {
-    foreach ( $modinfo as $mod ) {
+if (!empty($modinfo)) {
+    foreach ($modinfo as $mod) {
         $row = array();
-        if ( empty($mod->visible) ) {
+        if (empty($mod->visible)) {
             continue;
         }
-        if ( !empty($mod->icon) ) {
+        if (!empty($mod->icon)) {
             $icon = "$CFG->pixpath/$mod->icon";
         } else {
             $icon = $OUTPUT->pix_url('icon', $mod->mod);
@@ -93,8 +94,6 @@ if ( !empty($modinfo) ) {
 
         $javascript  = "<a href=\"javascript: void(set_value('/mod/{$mod->mod}/view.php?id={$mod->cm}', '{$CFG->wwwroot}'));\">";
         $javascript .= $strchoose .'</a>';
-        //echo $icon . ' ';
-        //echo $instancename . "<br />\n";
         $row[] = $icon . ' '. $instancename;
         $row[] = $javascript;
         array_push($table->data, $row);
