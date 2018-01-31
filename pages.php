@@ -63,7 +63,7 @@ $PAGE->set_context($context);
 $PAGE->navbar->add($strcms.' '.$stradministration, new moodle_url('/local/cms/index.php', array('course' => $course->id, 'sesskey' => sesskey())));
 $PAGE->navbar->add($strpages);
 
-if ( !empty($setfrontpage) && has_capability('local/cms:editpage', $context) ) {
+if (!empty($setfrontpage) && has_capability('local/cms:editpage', $context) ) {
 
     $sql = "
         SELECT
@@ -87,17 +87,17 @@ if ( !empty($setfrontpage) && has_capability('local/cms:editpage', $context) ) {
     $strsuccess = get_string('defaultpagechanged', 'local_cms');
     redirect(new moodle_url('/local/cms/pages.php', array('course' => $course->id, 'sesskey' => $USER->sesskey)), $strsuccess, 2);
 
-} else if ( !empty($_GET['add']) && has_capability('local/cms:createpage', $context) ) {
+} else if (optional_param('add', false, PARAM_TEXT) && has_capability('local/cms:createpage', $context)) {
 
     $parentid = !empty($id) ? $id : 0;
     redirect(new moodle_url('/local/cms/pageadd.php', array('id' => $COURSE->id, 'nid' => $menuid, 'sesskey' => sesskey(), 'parentid' => $parentid, 'course' => $course->id)));
 
-} else if (!empty($_GET['edit']) && has_capability('local/cms:editpage', $context)) {
+} else if (optional_param('edit', false, PARAM_TEXT) && has_capability('local/cms:editpage', $context)) {
 
     $id = required_param('id', PARAM_INT);
     redirect(new moodle_url('/local/cms/pageupdate.php', array('id' => $id, 'sesskey' => sesskey(), 'course' => $course->id)));
 
-} else if (!empty($_GET['purge']) && has_capability('local/cms:deletepage', $context)) {
+} else if (optional_param('purge', false, PARAM_TEXT) && has_capability('local/cms:deletepage', $context)) {
 
     $id = required_param('id', PARAM_INT);
     redirect(new moodle_url('/local/cms/pagedelete.php', array('id' => $id, 'sesskey' => sesskey(), 'course' => $course->id)));
@@ -108,6 +108,7 @@ if ( !empty($setfrontpage) && has_capability('local/cms:editpage', $context) ) {
 
 $sort = optional_param('sort', '', PARAM_ALPHA);
 $publish = optional_param('publish', '', PARAM_ALPHA);
+$showinmenu = optional_param('showinmenu', '', PARAM_ALPHA);
 
 if ( $sort && ($sort == 'up' or $sort == 'down') && has_capability('local/cms:movepage', $context) ) {
 
@@ -120,15 +121,22 @@ if ( $sort && ($sort == 'up' or $sort == 'down') && has_capability('local/cms:mo
     }
 }
 
-if ($publish && ($publish == 'yes' or $publish == 'no') && has_capability('local/cms:publishpage', $context) ) {
+if ($publish && ($publish == 'yes' or $publish == 'no') && has_capability('local/cms:publishpage', $context)) {
     $pageid = required_param('pid', PARAM_INT);
     $publish = ($publish != 'no') ? '1' : '0';
 
     $DB->set_field('local_cms_pages', 'publish', $publish, array('id' => $pageid));
 }
 
-if ( isset($_GET['move']) &&
-     has_capability('local/cms:movepage', $context) ) {
+if ($showinmenu && ($showinmenu == 'yes' or $showinmenu == 'no') && has_capability('local/cms:publishpage', $context)) {
+    $pageid = required_param('pid', PARAM_INT);
+    $showinmenu = ($showinmenu != 'no') ? '1' : '0';
+
+    $DB->set_field('local_cms_navi_data', 'showinmenu', $showinmenu, array('pageid' => $pageid));
+}
+
+if (optional_param('move', false, PARAM_TEXT) &&
+     has_capability('local/cms:movepage', $context)) {
 
     $pageid = required_param('pid', PARAM_INT);
     $move   = optional_param('move', '0', PARAM_INT);
