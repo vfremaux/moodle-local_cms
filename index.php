@@ -71,9 +71,7 @@ echo '<tr>';
 echo '<td align="center">';
 if ( has_capability('local/cms:createmenu', $context, $USER->id) ) {
     $menusurl = new moodle_url('/local/cms/menus.php', array('course' => $courseid, 'sesskey' => sesskey()));
-    echo '<a href="'.$menusurl.'">';
-    echo '<img src="'.$OUTPUT->pix_url('menus', 'local_cms').'" width="50" height="50" alt="'.$strmanagemenus.'"
-    title="'.$strmanagemenus.'" border="0" /></a><br />';
+    echo '<a href="'.$menusurl.'">'.$OUTPUT->pix_icon('menus', $strmanagemenus, 'local_cms').'</a><br />';
     echo '<a href="'.$menusurl.'">'.$strmanagemenus.'</a>';
 } else {
     echo "&nbsp;";
@@ -83,9 +81,7 @@ echo '</td>';
 echo '<td align="center">';
 if ( has_capability('local/cms:publishpage', $context, $USER->id) or has_capability('local/cms:createpage', $context, $USER->id) ) {
     $pagesurl = new moodle_url('/local/cms/pages.php', array('course' => $courseid, 'sesskey' => sesskey()));
-    echo '<a href="'.$pagesurl.'">';
-    echo '<img src="'.$OUTPUT->pix_url('pages', 'local_cms').'" width="50" height="50" alt="'.$strmanagepages.'"
-    title="'.$strmanagepages.'" /></a><br />';
+    echo '<a href="'.$pagesurl.'">'.$OUTPUT->pix_icon('pages', $strmanagepages, 'local_cms').'</a><br />';
     echo '<a href="'.$pagesurl.'">'.$strmanagepages.'</a>';
 } else {
     echo "&nbsp;";

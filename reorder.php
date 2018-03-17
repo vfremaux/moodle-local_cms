@@ -84,7 +84,7 @@ foreach ($siblings as $sibling) {
     } else {
         $reorderurl = new moodle_url('/local/cms/reorder.php', array('source' => $sibling->pageid, 'direction' => 'up'));
         $uplink = '<a href="'.$reorderurl.'">'
-                .'<img src="'.$OUTPUT->pix_url('t/up').'" alt="'.get_string('up').'" /></a> ';
+                .$OUTPUT->pix_icon('t/up', get_string('up')).'</a> ';
     }
     echo '<li>'.$uplink.$sibling->title.'</li>';
 }

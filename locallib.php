@@ -431,23 +431,15 @@ class cms_pages_menu {
 
         // Cache images. Pointless to initialize them in
         // methods every time.
-        $this->imgup   = '<img src="'. $OUTPUT->pix_url('t/up').'" width="11" height="11" alt="" border="0" />';
-        $this->imgdown = '<img src="'. $OUTPUT->pix_url('t/down').'" width="11" height="11" alt="" border="0" />';
-        $this->imgright = '<img src="'. $OUTPUT->pix_url('t/right').'" width="11" height="11" alt="" border="0" />';
-        $this->imgleft  = '<img src="'. $OUTPUT->pix_url('t/left').'" width="11" height="11" alt="" border="0" />';
-        $this->imgpub  = '<img src="'. $OUTPUT->pix_url('yespublish', 'local_cms').'" alt="' .
-                         stripslashes($this->strpublished) .'" title="' .
-                         stripslashes($this->strpublished) .'" />';
-        $this->imgunpub = '<img src="'. $OUTPUT->pix_url('nopublish', 'local_cms').'" alt="' .
-                          stripslashes($this->strunpublished) .'" title="' .
-                          stripslashes($this->strunpublished) .'" />';
-        $this->imginmenu  = '<img src="'. $OUTPUT->pix_url('inmenu', 'local_cms').'" alt="' .
-                         stripslashes($this->strinmenu) .'" title="' .
-                         stripslashes($this->strinmenu) .'" />';
-        $this->imgnotinmenu = '<img src="'. $OUTPUT->pix_url('notinmenu', 'local_cms').'" alt="' .
-                          stripslashes($this->strnotinmenu) .'" title="' .
-                          stripslashes($this->strnotinmenu) .'" />';
-        $this->imgblank = '<img src="'. $OUTPUT->pix_url('blank', 'local_cms').'" width="11" height="11" alt="" />';
+        $this->imgup   = $OUTPUT->pix_icon('t/up', '');
+        $this->imgdown = $OUTPUT->pix_icon('t/down', '');
+        $this->imgright = $OUTPUT->pix_icon('t/right', '');
+        $this->imgleft  = $OUTPUT->pix_icon('t/left', '');
+        $this->imgpub  = $OUTPUT->pix_icon('yespublish', $this->strpublished, 'local_cms');
+        $this->imgunpub = $OUTPUT->pix_icon('nopublish', $this->strunpublished, 'local_cms');
+        $this->imginmenu  = $OUTPUT->pix_icon('inmenu', $this->strinmenu, 'local_cms');
+        $this->imgnotinmenu = $OUTPUT->pix_icon('notinmenu', $this->strnotinmenu, 'local_cms');
+        $this->imgblank = $OUTPUT->pix_icon('blank', '', 'local_cms');
 
         $sql  = "
             SELECT

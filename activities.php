@@ -86,7 +86,7 @@ if (!empty($modinfo)) {
         if (!empty($mod->icon)) {
             $icon = "$CFG->pixpath/$mod->icon";
         } else {
-            $icon = $OUTPUT->pix_url('icon', $mod->mod);
+            $icon = $OUTPUT->image_url('icon', $mod->mod);
         }
         $icon = '<img src="'. $icon .'" alt="" />';
         $instancename = urldecode($mod->name);
