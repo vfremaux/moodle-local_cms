@@ -135,33 +135,33 @@ class local_cms_renderer extends plugin_renderer_base {
 
             if ( has_capability('local/cms:editpage', $context) ) {
                 $editurl = new moodle_url('/local/cms/pageupdate.php', array('id' => $pagedata->id, 'sesskey' => sesskey(), 'course' => $course->id));
-                $editicon = $OUTPUT->pix_url('i/edit');
-                $toolbar = '<a href="'.$editurl.'"><img src="'.$editicon.'" width="16" height="16" alt="'.$stredit.'" title="'.$stredit.'" border="0" /></a>';
+                $editicon = $OUTPUT->pix_icon('i/edit', $stredit);
+                $toolbar = '<a href="'.$editurl.'">'.$editicon.'</a>';
             }
 
             if (has_capability('local/cms:createpage', $context, $USER->id) && !empty($pagedata->id)) {
                 $menuid = $DB->get_field('local_cms_navi_data', 'naviid', array('pageid' => $pagedata->id));
                 $addurl = new moodle_url('/local/cms/pageadd.php', array('nid' => $menuid, 'sesskey' => sesskey(), 'parentid' => $pagedata->id, 'course' => $course->id));
-                $addicon = $OUTPUT->pix_url('add','local_cms');
-                $toolbar .= ' <a href="'.$addurl.'"><img src="'.$addicon.'" width="16" height="16" alt="'.$stradd.'" title="'.$stradd.'" border="0" /></a>';
+                $addicon = $OUTPUT->pix_icon('add','local_cms', $stradd);
+                $toolbar .= ' <a href="'.$addurl.'">'.$addicon.'</a>';
             }
 
             if (has_capability('local/cms:editpage', $context, $USER->id) &&!empty($pagedata->id)) {
                 $historyurl = new moodle_url('/local/cms/pagehistory.php', array('pageid' => $pagedata->id, 'sesskey' => sesskey(), 'course' => $course->id));
-                $historyicon = $OUTPUT->pix_url('history', 'local_cms');
-                $toolbar .= ' <a href="'.$historyurl.'"><img src="'.$historyicon.'" width="16" '.'height="16" alt="'.$strhistory.'" title="'.$strhistory.'" border="0" /></a>';
+                $historyicon = $OUTPUT->pix_icon('history', $strhistory, 'local_cms');
+                $toolbar .= ' <a href="'.$historyurl.'">'.$historyicon.'</a>';
             }
 
             if ( has_capability('local/cms:deletepage', $context, $USER->id) && ( !empty($pagedata->id) && intval($pagedata->isfp) !== 1) ) {
                 $deleteurl = new moodle_url('/local/cms/pagedelete.php', array('id' => $pagedata->id, 'sesskey' => sesskey(), 'course' => $course->id));
-                $deleteicon = $OUTPUT->pix_url('t/delete');
-                $toolbar .= ' <a href="'.$deleteurl.'"><img src="'.$deleteicon.'" width="11" height="11" alt="'.$strdelete.'" title="'.$strdelete.'" border="0" /></a>';
+                $deleteicon = $OUTPUT->pix_icon('t/delete', $strdelete);
+                $toolbar .= ' <a href="'.$deleteurl.'">'.$deleteicon.'</a>';
             }
 
             if ( has_capability('local/cms:editmenu', $context, $USER->id) && !empty($pagedata->naviid)) {
                 $editmenuurl = new moodle_url('/local/cms/menus.php', array('id' => $pagedata->naviid, 'sesskey' => sesskey(), 'course' => $course->id));
-                $editmenuicon = $OUTPUT->pix_url('f/folder');
-                $toolbar .= ' <a href="'.$editmenuurl.'"><img src="'.$editmenuicon.'" width="11" '.'height="11" alt="'.$streditmenus.'" title="'.$streditmenus.'" border="0" /></a>';
+                $editmenuicon = $OUTPUT->pix_icon('f/folder', $streditmenus);
+                $toolbar .= ' <a href="'.$editmenuurl.'">'.$editmenuicon.'</a>';
             }
 
             if (has_capability('local/cms:editpage', $context)) {
@@ -361,10 +361,8 @@ class local_cms_renderer extends plugin_renderer_base {
             $strmodified = get_string('modified');
             $strrequirelogin = get_string('requirelogin','local_cms');
             $strallowguest   = get_string('allowguest','local_cms');
-            $keypix = $OUTPUT->pix_url('key', 'local_cms');
-            $imgrlogin = '<img src="'.$keypix.' width="16" height="16" alt="'. $strrequirelogin .'"'.' title="'. $strrequirelogin .'" />';
-            $guestpix = $OUTPUT->pix_url('guest', 'local_cms');
-            $imgallowguest = '<img src="'.$guestpix.' width="16" height="16" alt="'. $strallowguest .'"' .' title="'. $strallowguest .'" />';
+            $imgrlogin = $OUTPUT->pix_icon('key', $strrequirelogin, 'local_cms');
+            $imgallowguest = $OUTPUT->pix_icon('guest', $strallowguest, 'local_cms');
 
             $tbl->head = array($strname, $stractions, $strintro,$strcreated, $strmodified, $imgrlogin, $imgallowguest);
 
@@ -380,11 +378,11 @@ class local_cms_renderer extends plugin_renderer_base {
             foreach ($menus as $menu) {
                 $editurl = new moodle_url('/local/cms/menuedit.php', array('id' => $menu->id, 'sesskey' => sesskey(), 'course' => $courseid));
                 $editlink  = '<a href="'.$editurl.'">';
-                $editlink .= '<img src="'.$OUTPUT->pix_url('t/edit').'" alt="'.$editpagestr.'" title="'.$editpagestr.'" border="0" /></a>';
+                $editlink .= $OUTPUT->pix_icon('t/edit', $editpagestr).'</a>';
 
                 $deleteurl = new moodle_url('/local/cms/menudelete.php', array('id' => $menu->id, 'sesskey' => sesskey(), 'course' => $courseid));
                 $dellink  = '<a href="'.$deleteurl.'">';
-                $dellink .= '<img src="'.$OUTPUT->pix_url('t/delete').'" alt="'.$deletepagestr.'" title="'.$deletepagestr.'" border="0" /></a>';
+                $dellink .= '<img src="'.$OUTPUT->pix_icon('t/delete', $deletepagestr).'</a>';
 
                 $created  = userdate($menu->created, "%x %X");
                 $modified = userdate($menu->modified, "%x %X");
