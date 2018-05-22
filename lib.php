@@ -29,6 +29,14 @@ defined('MOODLE_INTERNAL') || die();
  */
 
 /**
+ * This function is not implemented in thos plugin, but is needed to mark
+ * the vf documentation custom volume availability.
+ */
+function local_cms_supports_feature() {
+    assert(1);
+}
+
+/**
  * Serves the files included in cms pages. Implements needed access control ;-)
  *
  * There are several situations in general where the files will be sent.
@@ -71,7 +79,7 @@ function local_cms_pluginfile($course, $cm, $context, $filearea, $args, $forcedo
     $relativepath = implode('/', $args);
     $fullpath = "/$context->id/local_cms/$filearea/$itemid/$relativepath";
 
-    if (!$file = $fs->get_file_by_hash(sha1($fullpath)) or $file->is_directory()) {
+    if (!($file = $fs->get_file_by_hash(sha1($fullpath))) || $file->is_directory()) {
         return false;
     }
 

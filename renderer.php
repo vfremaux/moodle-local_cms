@@ -440,7 +440,7 @@ class local_cms_renderer extends plugin_renderer_base {
 
         // Prepare navigation to all menus in same context.
         $menus = $DB->get_records('local_cms_navi', array('course' => $menu->course), 'name');
-    
+
         include_once($CFG->dirroot.'/local/cms/html/navimenu.php');
         include_once($CFG->dirroot.'/local/cms/html/pagesindex.php');
     }

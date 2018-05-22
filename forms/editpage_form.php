@@ -39,7 +39,10 @@ class Edit_Page_Form extends moodleform {
             $context = context_course::instance($this->_customdata['pagecourse']);
         }
 
-        $this->editoroptions = array('maxfiles' => EDITOR_UNLIMITED_FILES, 'noclean' => true, 'context' =>  $context, 'maxbytes' => 0);
+        $this->editoroptions = array('maxfiles' => EDITOR_UNLIMITED_FILES,
+                                     'noclean' => true,
+                                     'context' =>  $context,
+                                     'maxbytes' => 0);
 
         $mform = $this->_form;
 
@@ -108,8 +111,6 @@ class Edit_Page_Form extends moodleform {
         $mform->addElement('select', 'parentid', get_string('parentpage', 'local_cms'), $parentoptions);
         $mform->setType('parentid', PARAM_INT);
 
-        //
-
         $mform->addElement('submit', 'preview', get_string('preview', 'local_cms'));
 
         $this->add_action_buttons(true);
@@ -139,10 +140,12 @@ class Edit_Page_Form extends moodleform {
 
         $defaults->bodyformat = FORMAT_HTML;
 
-        $body_draftid_editor = file_get_submitted_draft_itemid('body');
-        $currenttext = file_prepare_draft_area($body_draftid_editor, $context->id, 'local_cms', 'body', @$defaults->id, array('subdirs' => true), @$defaults->body);
-        $defaults = file_prepare_standard_editor($defaults, 'body', $this->editoroptions, $context, 'local_cms', 'body', @$defaults->id);
-        $defaults->body = array('text' => $currenttext, 'format' => FORMAT_HTML, 'itemid' => $body_draftid_editor);
+        $bodydraftideditor = file_get_submitted_draft_itemid('body');
+        $currenttext = file_prepare_draft_area($bodydraftideditor, $context->id, 'local_cms', 'body', @$defaults->id,
+                                               array('subdirs' => true), @$defaults->body);
+        $defaults = file_prepare_standard_editor($defaults, 'body', $this->editoroptions, $context, 'local_cms',
+                                                'body', @$defaults->id);
+        $defaults->body = array('text' => $currenttext, 'format' => FORMAT_HTML, 'itemid' => $bodydraftideditor);
 
         parent::set_data($defaults);
     }

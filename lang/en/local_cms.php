@@ -62,6 +62,7 @@ $string['linkto'] = 'Link to ...';
 $string['managemenus'] = 'Manage menus';
 $string['managepages'] = 'Manage pages';
 $string['menu'] = 'Menu';
+$string['inmenu'] = 'Visible in navigation block';
 $string['menuadded'] = 'New menu added';
 $string['menudeleted'] = 'Menu deleted!';
 $string['menudeletesure'] = 'You\'re about to <strong>delete</strong> menu <strong>{$a}</strong>!<br />Do you wish to continue?';
