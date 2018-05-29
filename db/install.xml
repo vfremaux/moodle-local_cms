@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="cms/db" VERSION="2014030100" COMMENT="XMLDB file for Moodle cms"
+<XMLDB PATH="local/cms/db" VERSION="2014030100" COMMENT="XMLDB file for Moodle cms local component"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../lib/xmldb/xmldb.xsd"
 >
