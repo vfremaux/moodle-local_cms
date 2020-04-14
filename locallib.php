@@ -16,6 +16,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+require_once($CFG->dirroot.'/local/cms/classes/cms_pages_menu.class.php');
+
 /**
  * local librairies
  *
@@ -49,6 +51,7 @@ function cms_get_page_data_by_id($courseidfoo, $pageid) {
                 nd.title,
                 nd.pagename,
                 nd.showblocks,
+                nd.embedded,
                 n.requirelogin,
                 n.allowguest,
                 n.printdate,
@@ -114,6 +117,7 @@ function cms_get_page_data($courseid = 0, $naviid = 0, $pagename = '') {
             nd.title,
             nd.pagename,
             nd.showblocks,
+            nd.embedded,
             n.requirelogin,
             n.allowguest,
             n.printdate,
@@ -251,6 +255,7 @@ function cms_get_page_data_from_id($pageid) {
             m.requirelogin,
             m.allowguest,
             n.showblocks,
+            n.embedded,
             m.course
         FROM
             {local_cms_pages} p,
@@ -290,14 +295,14 @@ function cms_reset_menu_order ($parentid, $menuid) {
     }
 
     $sql = "
-        SELECT 
-            id, 
-            pageid, 
+        SELECT
+            id,
+            pageid,
             parentid
         FROM 
             {local_cms_navi_data}
-        WHERE 
-            parentid = ? AND 
+        WHERE
+            parentid = ? AND
             naviid = ?
     ";
 
@@ -316,444 +321,6 @@ function cms_reset_menu_order ($parentid, $menuid) {
     }
 
     return true;
-}
-
-/**
- * This class takes care of page index output almost completely.
- *
- * @package CMS_plugin
- */
-class cms_pages_menu {
-    /**
-    * Array container for pages
-    * @var array $pages
-    */
-    public $pages = null;
-    /**
-    * Menu id
-    * @var int $menuid
-    */
-    public $menuid = null;
-    /**
-    * Course id
-    * @var int $courseid
-    */
-    public $courseid = null;
-    /**
-    * String holder for image up on pages index.
-    * @var string $imgup
-    */
-    public $imgup = null;
-    /**
-    * String holder for image down on pages index.
-    * @var string $imgdown
-    */
-    public $imgdown;
-    /**
-    * String holder for image right on pages index.
-    * @var string $imgright
-    */
-    public $imgright;
-    /**
-    * String holder for image left on pages index.
-    * @var string $imgleft
-    */
-    public $imgleft;
-    /**
-    * String holder for publish image on pages index.
-    * @var string $imgpub
-    */
-    public $imgpub;
-    /**
-    * String holder for unpublish image on pages index.
-    * @var string $imgunpub
-    */
-    public $imgunpub;
-    /**
-    * String holder for blank image on pages index.
-    * @var string $imgblank
-    */
-    public $imgblank;
-    /**
-    * Language string for default page.
-    * @var string $strisdefault
-    */
-    public $strisdefault;
-    /**
-    * Language string for set as default page.
-    * @var string $strsetasdefault
-    */
-    public $strsetasdefault;
-    /**
-    * Language string for published.
-    * @var string $strpublished
-    */
-    public $strpublished;
-    /**
-    * Language string for unpublished.
-    * @var string $strunpublished
-    */
-    public $strunpublished;
-    /**
-    * Site container.
-    * @var object $site
-    */
-    public $siteid;
-    /**
-    * wwwroot for internal use.
-    * @var string $wwwroot
-    */
-    public $wwwroot;
-
-    /**
-    * Constructor sets up needed variables and
-    * fetch pages information from database.
-    *
-    * @uses $CFG
-    * @uses $USER
-    * @param int $menuid
-    * @param int $courseid
-    */
-    function __construct($menuid, $courseid = 1) {
-        global $CFG, $USER, $DB, $OUTPUT;
-
-        $this->menuid = clean_param($menuid, PARAM_INT);
-        $this->courseid = clean_param($courseid, PARAM_INT);
-
-        // Get strings
-        $this->strisdefault    = get_string('isdefaultpage', 'local_cms');
-        $this->strsetasdefault = get_string('setdefault', 'local_cms');
-        $this->strpublished    = get_string('published', 'local_cms');
-        $this->strunpublished  = get_string('unpublished', 'local_cms');
-        $this->strmenu  = get_string('showinmenu', 'local_cms');
-        $this->strinmenu  = get_string('inmenu', 'local_cms');
-        $this->strnotinmenu  = get_string('notinmenu', 'local_cms');
-
-        // Cache images. Pointless to initialize them in
-        // methods every time.
-        $this->imgup   = $OUTPUT->pix_icon('t/up', '');
-        $this->imgdown = $OUTPUT->pix_icon('t/down', '');
-        $this->imgright = $OUTPUT->pix_icon('t/right', '');
-        $this->imgleft  = $OUTPUT->pix_icon('t/left', '');
-        $this->imgpub  = $OUTPUT->pix_icon('yespublish', $this->strpublished, 'local_cms');
-        $this->imgunpub = $OUTPUT->pix_icon('nopublish', $this->strunpublished, 'local_cms');
-        $this->imginmenu  = $OUTPUT->pix_icon('inmenu', $this->strinmenu, 'local_cms');
-        $this->imgnotinmenu = $OUTPUT->pix_icon('notinmenu', $this->strnotinmenu, 'local_cms');
-        $this->imgblank = $OUTPUT->pix_icon('blank', '', 'local_cms');
-
-        $sql  = "
-            SELECT
-                n.pageid AS id,
-                n.id as navidataid,
-                n.naviid,
-                n.pagename,
-                n.title,
-                n.isfp,
-                n.parentid,
-                n.url,
-                n.target,
-                n.showinmenu,
-                p.publish,
-                p.created,
-                p.modified
-            FROM 
-                {local_cms_navi_data} n,
-                {local_cms_pages} p
-            WHERE
-                n.pageid = p.id AND
-                n.naviid = ?
-            ORDER BY
-                n.sortorder
-        ";
-
-        $this->pages = $DB->get_records_sql($sql, array($this->menuid));
-        $this->siteid = SITEID;
-        $this->wwwroot = $CFG->wwwroot;
-        $this->path = array();
-        $this->tmparray = array();
-
-        if ($this->pages) {
-            foreach ( $this->pages as $page ) {
-                $this->tmparray[$page->parentid][] = $page->id;
-            }
-        }
-    }
-
-    /**
-     * Check if current page has parent page. For internal use only.
-     * @param int $pageid
-     * @param bool $returnid
-     * @return mixed Returns parent page id if enable or true/false
-     */
-    function __hasParent($pageid, $returnid = FALSE) {
-
-        $pageid = intval($pageid);
-
-        if ( !empty($this->pages[$pageid]) ) {
-            $page = $this->pages[$pageid];
-                if ( $page->parentid != 0 ) {
-                if ( !$returnid ) {
-                    return true;
-                } else {
-                    // return first item.
-                    return (int) $page->parentid;
-                }
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Check if current page has child page. For internal use only.
-     * @param int $pageid
-     * @param bool $returnid
-     * @return mixed Returns child page id if enable or true/false
-     */
-    function __hasChildren($pageid, $returnid = FALSE) {
-
-        $pageid = intval($pageid);
-
-        if ( !empty($this->tmparray[$pageid]) ) {
-            if ( !$returnid ) {
-                return true;
-            } else {
-                // return first item in array.
-                return (int) $this->tmparray[$pageid][0];
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Check if current page has sibling page. For internal use only.
-     * @param int $parentid
-     * @return bool
-     */
-    function __hasSibling($parentid) {
-
-        $parentid = intval($parentid);
-        if ( !empty($this->tmparray[$parentid]) ) {
-                    return true;
-                }
-
-        return false;
-    }
-
-    /**
-     * Check if current page is the first page in current level.
-     * @param int $parentid
-     * @param int $pageid
-     * @return bool
-     */
-    function __firstAtLevel ( $parentid, $pageid ) {
-        $pageid = intval($pageid);
-        $parentid = intval($parentid);
-
-        if ( !empty($this->tmparray[$parentid]) ) {
-            $first = array_shift($this->tmparray[$parentid]);
-            array_unshift($this->tmparray[$parentid], $first);
-            if ( $first == $pageid ) {
-                        return true;
-                    }
-                }
-
-        return false;
-
-    }
-
-    /**
-     * Check if current page is the last page in current level.
-     * @param int $parentid
-     * @param int $pageid
-     * @return bool
-     */
-    function __lastAtLevel($parentid, $pageid) {
-        $pageid = intval($pageid);
-        $parentid = intval($parentid);
-
-        if ( !empty($this->tmparray[$parentid]) ) {
-            if ( end($this->tmparray[$parentid]) == $pageid ) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Construct data for table class used in pagesindex page.
-     *
-     * @uses $USER
-     * @staticvar array $output
-     * @staticvar int $count
-     * @staticvar object $prevpage
-     * @param int $parentid
-     * @return array
-     */
-    function get_page_tree_rows($parentid) {
-        static $output, $count, $prevpage;
-
-        if ( empty($output) ) {
-            $output = array();
-        }
-        if ( empty($count) ) {
-            $count = 0;
-        }
-
-        if (!empty($this->pages)) {
-            $count++;
-            foreach ($this->pages as $p) {
-                if ($p->parentid == $parentid) {
-                    $row = array();
-
-                    $row[] = '<input type="checkbox" name="id" value="'.$p->id .'" />';
-
-                    $params = array('sesskey' => sesskey(),
-                                    'sort' => 'up',
-                                    'menuid' => $p->naviid,
-                                    'pid' => $p->id,
-                                    'mid' => $p->parentid,
-                                    'course' => $this->courseid);
-                    $url = new moodle_url('/local/cms/pages.php', $params);
-                    $hrefup = '<a href="'.$url.'">'.$this->imgup .'</a>';
-
-                    $params = array('sesskey' => sesskey(),
-                                    'sort' => 'down',
-                                    'menuid' => $p->naviid,
-                                    'pid' => $p->id,
-                                    'mid' => $p->parentid,
-                                    'course' => $this->courseid);
-                    $url = new moodle_url('/local/cms/pages.php', $params);
-                    $hrefdown = '<a href="'.$url.'">'.$this->imgdown .'</a>';
-
-                    $hrefleft = '';
-                    if ( !empty($prevpage->id) or $this->__hasParent($p->id) ) {
-                        $moveto = $this->__hasParent($p->parentid, true);
-                        if ( empty($moveto) ) {
-                            $moveto = '0';
-                        }
-                        $params = array('sesskey' => sesskey(),
-                                        'move' => $moveto,
-                                        'pid' => $p->id,
-                                        'menuid' => $p->naviid,
-                                        'course' => $this->courseid);
-                        $url = new moodle_url('/local/cms/pages.php', $params);
-                        $hrefleft = '<a href="'.$url.'" alt="">'. $this->imgleft .'</a>';
-                    }
-
-                    $hrefright = '';
-                    if ( !empty($prevpage->id) ) {
-                        $params = array('sesskey' => sesskey(),
-                                        'move' => $prevpage->id,
-                                        'pid' => $p->id,
-                                        'menuid' => $p->naviid,
-                                        'course' => $this->courseid);
-                        $url = new moodle_url('/local/cms/pages.php', $params);
-                        $hrefright  = '<a href="'.$url.'" alt="">'. $this->imgright .'</a>';
-                    }
-
-                    $moverow = '<table border="0" cellpadding="2"><tr>';
-
-                    if ($this->__firstAtLevel($p->parentid, $p->id) &&
-                         $this->__hasSibling($p->parentid)) {
-                        $moverow .= '<td>'. $hrefdown .'</td><td>'. $this->imgblank .'</td>';
-                    } else if ( $this->__lastAtLevel($p->parentid, $p->id) &&
-                                $this->__hasSibling($p->parentid) ) {
-                        $moverow .= '<td>'. $this->imgblank .'</td><td>'. $hrefup .'</td>';
-                    } else if ( $this->__hasSibling($p->parentid) ) {
-                        $moverow .= '<td>'.$hrefdown .'</td><td>'. $hrefup .'</td>';
-                    } else {
-                        $moverow .= '<td>'.$this->imgblank .'</td><td>'. $this->imgblank .'</td>';
-                    }
-
-                    // Add level changers.
-                    if ($this->__hasParent($p->id)) {
-                        $moverow .= '<td>'. $hrefleft .'</td>';
-                    } else {
-                        $moverow .= '<td>'. $this->imgblank .'</td>';
-                    }
-                    if ($this->__hasSibling($p->parentid) && !$this->__firstAtLevel($p->parentid, $p->id)) {
-                        $moverow .= '<td>'. $hrefright .'</td>';
-                    }
-
-                    $row[] = $moverow .'</tr></table>';
-
-                    $pageurl = '';
-                    if (!empty($this->siteid)) {
-                        $pageurl = new moodle_url('/local/cms/view.php', array('pid' => $p->id));
-                    }
-
-                    // If link is a direct url to resource or webpage
-                    if (!empty($p->url)) {
-                        $pageurl = $p->url;
-                    }
-
-                    $p->title  = '<a href="'. $pageurl .'" target="_blank">'.format_string($p->title).'</a>';
-                    $pagetitle  = str_repeat("&nbsp;&nbsp;&nbsp;&nbsp;", $count - 1);
-                    $pagetitle .= !empty($p->isfp) ? '<strong>'. $p->title .'</strong>' : $p->title;
-                    $row[] = $pagetitle;
-
-                    $url = new moodle_url('/local/cms/pages.php', array('course' => $this->courseid, 'sesskey' => sesskey(), 'setfp' => $p->id));
-                    $default = !empty($p->isfp) ? $this->strisdefault :
-                               ((!empty($p->publish) && empty($p->parentid)) ?
-                               '<a href="'.$url.'">'. $this->strsetasdefault.'</a>' : '');
-                    $row[] = $default;
-
-                    $params = array('course' => $this->courseid, 'sesskey' => sesskey(), 'pid' => $p->id, 'menuid' => $p->naviid);
-                    $url = new moodle_url('/local/cms/pages.php', $params);
-
-                    if (empty($p->publish)) {
-                        $url->param('publish', 'yes');
-                        $publishlink = '<a href="'.$url.'">'. $this->imgunpub .'</a>';
-                    } else {
-                        $url->param('publish', 'no');
-                        $publishlink = '<a href="'.$url.'">'. $this->imgpub .'</a>';
-                    }
-                    $row[] = $publishlink;
-
-                    $url = new moodle_url('/local/cms/pages.php', $params);
-                    if (empty($p->showinmenu)) {
-                        $url->param('showinmenu', 'yes');
-                        $menulink = '<a href="'.$url.'">'. $this->imgnotinmenu .'</a>';
-                    } else {
-                        $url->param('showinmenu', 'no');
-                        $menulink = '<a href="'.$url.'">'. $this->imginmenu .'</a>';
-                    }
-                    $row[] = $menulink;
-
-                    // Get version information.
-                    $version = cms_get_page_version($p->id);
-                    $params = array('sesskey' => sesskey(), 'course' => $this->courseid, 'menuid' => $p->naviid, 'pageid' => $p->id);
-                    $url = new moodle_url('/local/cms/pagehistory.php', $params);
-                    $historylink = '<a href="'.$url.'">' . s($version) .'</a>';
-                    $row[] = $historylink; //s($version);
-                    $row[] = userdate($p->modified, "%x %X");
-
-                    array_push($output, $row);
-                    $this->get_page_tree_rows($p->navidataid);
-                    $prevpage = $p;
-                }
-            }
-            $count--;
-        }
-
-        return $output;
-    }
-
-    /**
-     * Create path string from page ids like 2,3,4
-     * @param int $pageid
-     * @return string
-     */
-    function __get_path($pageid) {
-
-        $pagearray = array();
-        array_push($pagearray, $pageid);
-        while ( $pageid = $this->__hasParent($pageid, true) ) {
-            array_push($pagearray,$pageid);
-        }
-        return implode(",", array_reverse($pagearray));
-    }
 }
 
 /**
@@ -989,4 +556,54 @@ function cms_get_visible_pages($menuid) {
     ";
     $pages = $DB->get_records_sql($sql, array($menuid));
     return $pages;
+}
+
+/**
+ * Extracts file argument either from file parameter or PATH_INFO
+ *
+ * Note: $scriptname parameter is not needed anymore
+ *
+ * @return string file path (only safe characters)
+ */
+function cms_get_file_argument() {
+    global $SCRIPT;
+
+    $relativepath = false;
+    $hasforcedslashargs = false;
+
+    if (!$hasforcedslashargs) {
+        $relativepath = optional_param('file', false, PARAM_TEXT);
+    }
+
+    if ($relativepath !== false and $relativepath !== '') {
+        return $relativepath;
+    }
+    $relativepath = false;
+
+    // Then try extract file from the slasharguments.
+    if (stripos($_SERVER['SERVER_SOFTWARE'], 'iis') !== false) {
+        // NOTE: IIS tends to convert all file paths to single byte DOS encoding,
+        //       we can not use other methods because they break unicode chars,
+        //       the only ways are to use URL rewriting
+        //       OR
+        //       to properly set the 'FastCGIUtf8ServerVariables' registry key.
+        if (isset($_SERVER['PATH_INFO']) and $_SERVER['PATH_INFO'] !== '') {
+            // Check that PATH_INFO works == must not contain the script name.
+            if (strpos($_SERVER['PATH_INFO'], $SCRIPT) === false) {
+                $relativepath = clean_param(urldecode($_SERVER['PATH_INFO']), PARAM_TEXT);
+            }
+        }
+    } else {
+        // All other apache-like servers depend on PATH_INFO.
+        if (isset($_SERVER['PATH_INFO'])) {
+            if (isset($_SERVER['SCRIPT_NAME']) and strpos($_SERVER['PATH_INFO'], $_SERVER['SCRIPT_NAME']) === 0) {
+                $relativepath = substr($_SERVER['PATH_INFO'], strlen($_SERVER['SCRIPT_NAME']));
+            } else {
+                $relativepath = $_SERVER['PATH_INFO'];
+            }
+            $relativepath = clean_param($relativepath, PARAM_TEXT);
+        }
+    }
+
+    return $relativepath;
 }

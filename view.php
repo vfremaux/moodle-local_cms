@@ -27,6 +27,7 @@
 if (!defined('MOODLE_INTERNAL')) {
     // We are entering directly in this page.
     require('../../config.php');
+    require_once($CFG->dirroot.'/local/cms/locallib.php');
 
     $config = get_config('local_cms');
 
@@ -34,15 +35,15 @@ if (!defined('MOODLE_INTERNAL')) {
 
     // If a pagename is given, give course scope
     if ($CFG->slasharguments && !$pagename) {
-        $relativepath = str_replace($config->virtual_path, '', get_file_argument());
-        $pagename = preg_replace('#^/#', '', $relativepath);
+        $relativepath = str_replace($config->virtual_path, '', cms_get_file_argument());
+        $pagename = urldecode(preg_replace('#^/#', '', $relativepath));
     } else {
         $courseid = optional_param('id', SITEID, PARAM_INT);
     }
 
     // A single pid is enough to rebuild scope.
     $pageid = optional_param('pid', 0, PARAM_INT);
-    $embedded = false;
+    $internal = false;
 } else {
     // this case when this script is included
     // TODO: check this is still useful....
@@ -50,7 +51,7 @@ if (!defined('MOODLE_INTERNAL')) {
     // if (!isset($pagename)) $pagename = '';
     global $OUTPUT;
     $pageid = optional_param('pid', 0, PARAM_INT);
-    $embedded = true;
+    $internal = true;
 }
 
 require_once($CFG->dirroot.'/course/lib.php');
@@ -71,7 +72,7 @@ $move = optional_param('move', 0, PARAM_INT);
 $marker = optional_param('marker',-1 , PARAM_INT);
 $switchrole = optional_param('switchrole',-1, PARAM_INT);
 
-// Resolve page from input params
+// Resolve page from input params.
 if (!empty($pageid)) {
     // Explicit page id given.
     if ($pageid == 0) {
@@ -104,8 +105,10 @@ if (!empty($pageid)) {
 if (empty($pagedata)) {
     // Last chance if we are in site context : use slasharguments
     if (SITEID == $courseid && $CFG->slasharguments ) {
-        // Support sitelevel slasharguments
-        // in form /index.php/<$CFG->block_cmsnavigation_cmsvirtual>/<pagename>
+        /*
+         * Support sitelevel slasharguments.
+         * in form /index.php/<$CFG->block_cmsnavigation_cmsvirtual>/<pagename>
+         */
         $relativepath = get_file_argument(basename($_SERVER['SCRIPT_FILENAME']));
         if ( preg_match("#^{$config->virtual_path}(/[a-z0-9\_\-]+)#i", $relativepath) ) {
             $args = explode("/", $relativepath);
@@ -127,7 +130,7 @@ if ($course->id == SITEID) {
     $context = context_course::instance($course->id);
 }
 
-// check accessibility by checking page menu state
+// Check accessibility by checking page menu state.
 if ($pagedata->requirelogin) {
 
     if ($course->id == SITEID) {
@@ -148,7 +151,7 @@ if ($pagedata->requirelogin) {
     $COURSE = $course;
 }
 
-// Remove any switched roles before checking login
+// Remove any switched roles before checking login.
 if ($switchrole == 0 && confirm_sesskey()) {
     role_switch($switchrole, $context);
 }
@@ -159,19 +162,19 @@ if ($switchrole == 0 && confirm_sesskey()) {
 $reset_user_allowed_editing = false;
 if ($switchrole > 0 && confirm_sesskey() &&
     has_capability('moodle/role:switchroles', $context)) {
-    // is this role assignable in this context?
-    // inquiring minds want to know...
+    /*
+     * is this role assignable in this context?
+     * inquiring minds want to know...
+     */
     $aroles = get_assignable_roles($context);
     if (is_array($aroles) && isset($aroles[$switchrole])) {
         role_switch($switchrole, $context);
-        // Double check that this role is allowed here
+        // Double check that this role is allowed here.
         if (@!empty($pagedata->requirelogin) && !has_capability('moodle/site:config', $context)) { //CMS check if need to requirelogin.
             require_login($course->id);
         }
     }
 }
-
-// add_to_log($course->id, 'course', 'view', "/local/cms/view.php?id=$course->id", "$course->id");
 
 $params = array(
     'context' => $context,
@@ -190,6 +193,9 @@ $PAGE->set_context($context);
 local_cms_add_nav($pagedata);
 $PAGE->set_title($pagedata->title);
 $PAGE->set_course($course);
+if ($pagedata->embedded) {
+    $PAGE->set_pagelayout('embedded');
+}
 
 $renderer = $PAGE->get_renderer('local_cms');
 
@@ -212,13 +218,15 @@ if ($PAGE->user_allowed_editing()) {
     $USER->editing = 0;
 }
 
-echo $OUTPUT->header();
+if (!$internal) {
+    echo $OUTPUT->header();
+}
 
-echo '<div class="course-content">';  // course wrapper start
+echo '<div class="course-content">';  // Course wrapper start.
 
-// Bounds for block widths
+// Bounds for block widths.
 
-echo $OUTPUT->box_start('left', '580', '', 5, 'sitetopic');
+echo $OUTPUT->box_start('sitetopic');
 
 if (! empty($pagedata->requirelogin) &&
    (isguestuser() && !$pagedata->allowguest)) {
@@ -229,6 +237,7 @@ if (! empty($pagedata->requirelogin) &&
         echo $renderer->actions($pagedata, $course, $context);
     }
     $pagecontent = $renderer->render_page($pagedata, $course);
+
     echo $pagecontent;
 
     if (!empty($pagedata->printdate)) {
@@ -239,14 +248,14 @@ if (! empty($pagedata->requirelogin) &&
             $e->modified = userdate($pagedata->modified);
             echo '<p style="font-size: x-small;">'. get_string('lastmodifiedby', 'local_cms', $e) .'</p>';
         } else {
-            // This is just for handling old unassigned records
+            // This is just for handling old unassigned records.
             $modified = userdate($pagedata->modified);
             echo '<p style="font-size: x-small;">'. get_string('lastmodified', 'local_cms', $modified) .'</p>';
         }
     }
     if ($editing) {
         $stradmin = get_string('admin');
-        $adminurl = new moodle_url('/cms/index.php', array('course' => $course->id, 'sesskey' => $USER->sesskey));
+        $adminurl = new moodle_url('/local/cms/index.php', array('course' => $course->id, 'sesskey' => $USER->sesskey));
         echo '<p style="font-size: x-small;">';
         echo '<a href="'.$adminurl.'">'.$stradmin.'</a></p>';
     }
@@ -256,6 +265,6 @@ echo $OUTPUT->box_end();
 
 echo '</div>';
 
-if (!$embedded) {
+if (!$internal) {
     echo $OUTPUT->footer();
 }
