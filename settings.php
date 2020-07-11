@@ -16,6 +16,17 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+// settings default init
+if (is_dir($CFG->dirroot.'/local/adminsettings')) {
+    // Integration driven code 
+    require_once($CFG->dirroot.'/local/adminsettings/lib.php');
+    list($hasconfig, $hassiteconfig, $capability) = local_adminsettings_access();
+} else {
+    // Standard Moodle code
+    $capability = 'moodle/site:config';
+    $hasconfig = $hassiteconfig = has_capability($capability, context_system::instance());
+}
+
 if ($hassiteconfig) {
     $settings = new admin_settingpage('local_cms', get_string('pluginname', 'local_cms'));
     $ADMIN->add('localplugins', $settings);
