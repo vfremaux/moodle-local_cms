@@ -95,6 +95,8 @@ class Edit_Page_Form extends moodleform {
 
         $mform->addElement('advcheckbox', 'showblocks', get_string('showblocks', 'local_cms'), '');
 
+        $mform->addElement('advcheckbox', 'embedded', get_string('embedded', 'local_cms'), '');
+
         if ( has_capability('local/cms:publishpage', $context, $USER->id) ) {
             $mform->addElement('advcheckbox', 'publish', get_string('publish', 'local_cms'), '');
         } else {
