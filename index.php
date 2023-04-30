@@ -48,8 +48,6 @@ if ($courseid == SITEID) {
 
 $stradministration = get_string('administration');
 $strcms = get_string('cms', 'local_cms');
-$strmanagepages = get_string('managepages', 'local_cms');
-$strmanagemenus = get_string('managemenus', 'local_cms');
 
 $PAGE->set_url($url);
 $PAGE->set_context($context);
@@ -57,43 +55,13 @@ $PAGE->navbar->add($strcms.' '.$stradministration);
 $PAGE->set_title($strcms);
 $PAGE->set_heading($strcms);
 
+$renderer = $PAGE->get_renderer('local_cms');
+
 echo $OUTPUT->header();
-echo $OUTPUT->box_start("center", "100%", '', 20);
 
-echo '<table class="generaltable" border="0" cellpadding="4" cellspacing="2" align="center">';
-echo '<tr>';
-echo '<td class="generaltablecell">';
+echo $OUTPUT->box_start('', 'cmsmanagementpanel');
 
-echo $OUTPUT->heading_with_help($strcms . ' '. $stradministration, 'cms', 'local_cms', 'cms');
-
-echo '<table border="0" cellpadding="4" cellspacing="2">';
-echo '<tr>';
-echo '<td align="center">';
-if ( has_capability('local/cms:createmenu', $context, $USER->id) ) {
-    $menusurl = new moodle_url('/local/cms/menus.php', array('course' => $courseid, 'sesskey' => sesskey()));
-    echo '<a href="'.$menusurl.'">'.$OUTPUT->pix_icon('menus', $strmanagemenus, 'local_cms').'</a><br />';
-    echo '<a href="'.$menusurl.'">'.$strmanagemenus.'</a>';
-} else {
-    echo "&nbsp;";
-}
-        
-echo '</td>';
-echo '<td align="center">';
-if ( has_capability('local/cms:publishpage', $context, $USER->id) or has_capability('local/cms:createpage', $context, $USER->id) ) {
-    $pagesurl = new moodle_url('/local/cms/pages.php', array('course' => $courseid, 'sesskey' => sesskey()));
-    echo '<a href="'.$pagesurl.'">'.$OUTPUT->pix_icon('pages', $strmanagepages, 'local_cms').'</a><br />';
-    echo '<a href="'.$pagesurl.'">'.$strmanagepages.'</a>';
-} else {
-    echo "&nbsp;";
-}
-
-echo '</td>';
-echo '</tr>';
-echo '</table>';
-
-echo '</td>';
-echo '</tr>';
-echo '</table>';
+echo $renderer->render_index($context);
 
 echo $OUTPUT->box_end();
 echo $OUTPUT->footer();

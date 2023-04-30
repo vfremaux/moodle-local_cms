@@ -26,6 +26,9 @@ $string['cms:editpage'] = 'Can edit pages';
 $string['cms:movepage'] = 'Can edit pages';
 $string['cms:publishpage'] = 'Publish pages';
 
+// Privacy.
+$string['privacy:metadata'] = 'The Local CMS plugin does not store any personal data about any user.';
+
 $string['actions'] = 'Actions';
 $string['addchild'] = 'Add child page';
 $string['addnewmenu'] = 'Add new menu';
@@ -45,6 +48,10 @@ $string['diff'] = 'Diff';
 $string['editmenu'] = 'Edit menu';
 $string['editortricks'] = 'Editing special tricks';
 $string['editpage'] = 'Edit page';
+$string['embedded'] = 'Embed the page';
+$string['embed'] = 'Embedded';
+$string['isembed'] = 'Embedded page';
+$string['isnoembed'] = 'Plain page';
 $string['errorbadpage'] = 'Error retrieving CMS page!';
 $string['errorcreatepage'] = 'Couldn\'t create new page!';
 $string['errorpagemenulink'] = 'Error while linking page to menu! Page has been removed.';

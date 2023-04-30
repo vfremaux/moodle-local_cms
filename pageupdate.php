@@ -29,7 +29,7 @@ require_once($CFG->dirroot.'/local/cms/locallib.php');
 require_once($CFG->dirroot.'/local/cms/forms/editpage_form.php');
 
 $id = required_param('id', PARAM_INT); // Page id
-$courseid = optional_param('course', SITEID, PARAM_INT); // This is the menu block implantation course
+$courseid = optional_param('course', SITEID, PARAM_INT); // This is the menu block implantation course.
 $version = optional_param('version', 0, PARAM_INT);
 
 $originalpage = cms_get_page_data_from_id($id);
@@ -123,6 +123,10 @@ if ($fromform = $pageform->get_data()) { // Save button has been pressed
 
         if (empty($fromform->showblocks)) {
             $fromform->showblocks = 0;
+        }
+
+        if (empty($fromform->embedded)) {
+            $fromform->embedded = 0;
         }
 
         $updatedpage = new StdClass();

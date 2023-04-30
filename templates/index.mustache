@@ -1,0 +1,28 @@
+
+
+<!-- index -->
+<table class="generaltable" border="0" cellpadding="4" cellspacing="2" align="center">
+    <tr>
+        <td class="generaltablecell">
+
+            {{{heading}}}
+
+            <table border="0" cellpadding="4" cellspacing="2">
+                <tr>
+                    <td align="center">
+                        {{#cancreatemenu}}
+                        <a href="{{{menusurl}}}">{{{managemenusicon}}}</a><br /> <a href="{{{menusurl}}}">{{strmanagemenus}}</a>
+                        {{/cancreatemenu}}
+                    </td>
+                    <td align="center">
+                        {{#canedit}}
+                        <a href="{{{pagesurl}}}">{{{managepagesicon}}}</a><br /> <a href="{{{pagesurl}}}">{{strmanagepages}}</a>
+                        {{/canedit}}
+                    </td>
+                </tr>
+            </table>
+
+        </td>
+    </tr>
+</table>
+<!-- /index -->

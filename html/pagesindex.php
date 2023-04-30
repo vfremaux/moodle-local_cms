@@ -32,6 +32,7 @@ global $USER;
 $strpagetitle = get_string('page', 'local_cms');
 $stractions = get_string('actions', 'local_cms');
 $strpublish = get_string('publish', 'local_cms');
+$strembedded = get_string('embed', 'local_cms');
 $strmenu = get_string('showinmenu', 'local_cms');
 //$strcreated   = get_string('created', 'local_cms');
 $strversion   = get_string('version');
@@ -41,13 +42,13 @@ $themenu = new cms_pages_menu($menu->id, $courseid);
 $haspages = count($themenu->pages);
 $tbl = new html_table;
 
-$tbl->head = array('', '', $strpagetitle, '', $strpublish, $strmenu, $strversion, $strmodified);
-$tbl->align = array('left', 'left', 'left', 'center', 'center', 'center', 'center', 'center');
-$tbl->size = array('5%', '10%', '35%', '20%', '5%', '5%', '10%', '10%');
+$tbl->head = array('', '', $strpagetitle, '', $strembedded, $strpublish, $strmenu, $strversion, $strmodified);
+$tbl->align = array('left', 'left', 'left', 'center', 'center', 'center', 'center', 'center', 'center');
+$tbl->size = array('5%', '10%', '30%', '20%', '5%', '5%', '5%', '10%', '10%');
 $tbl->width = '100%';
 $tbl->cellpadding = 3;
 $tbl->cellspacing = 1;
-$tbl->nowrap = array('', 'nowrap', 'nowrap', '', '', '', '', '');
+$tbl->nowrap = array('', 'nowrap', 'nowrap', '', '', '', '', '', '');
 $tbl->data  = array();
 
 //$tbl->data = cms_print_pages_menu(0, $menu->id, $courseid);
