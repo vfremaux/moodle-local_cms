@@ -26,7 +26,7 @@ function xmldb_local_cms_upgrade($oldversion=0) {
     $dbman = $DB->get_manager();
 
     if ($oldversion < 2015110100) {
-        // Define table mplayer_userdata.
+
         $table = new xmldb_table('local_cms_pages');
 
         // Add field lastuserid to track the last writer in a page
@@ -37,6 +37,20 @@ function xmldb_local_cms_upgrade($oldversion=0) {
         }
 
         upgrade_plugin_savepoint(true, 2015110100, 'local', 'cms');
+    }
+
+    if ($oldversion < 2018102401) {
+
+        $table = new xmldb_table('local_cms_navi_data');
+
+        // Add field embedded to allow embed in another moodle page.
+        $field = new xmldb_field('embedded');
+        $field->set_attributes(XMLDB_TYPE_INTEGER, 1, null, XMLDB_NOTNULL, null, 0, 'target');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        upgrade_plugin_savepoint(true, 2018102401, 'local', 'cms');
     }
 
     return $result;

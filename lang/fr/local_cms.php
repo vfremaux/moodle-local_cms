@@ -26,6 +26,9 @@ $string['cms:movepage'] = 'Déplacer les pages';
 $string['cms:publishpage'] = 'Publier les pages';
 $string['cms:editmenu'] = 'Modifier les volumes';
 
+// Privacy.
+$string['privacy:metadata'] = 'Le composant local CMS ne détient directement aucune donnée relative aux utilisateurs.';
+
 $string['eventcmspageviewed'] = 'Page CMS visitée';
 
 $string['actions'] = 'Actions';
@@ -47,6 +50,10 @@ $string['diff'] = 'Différence';
 $string['editmenu'] = 'Editer le volume';
 $string['editpage'] = 'Editer la page';
 $string['editortricks'] = 'Astuces d\'édition du CMS';
+$string['embedded'] = 'Page intégrée';
+$string['embed'] = 'Intégrée';
+$string['isembed'] = 'Intégrée';
+$string['isnoembed'] = 'Pleine page';
 $string['fetchback'] = 'Restaurer';
 $string['frontpagecms'] = 'Contenu CMS';
 $string['intro'] = 'Description';

@@ -27,6 +27,8 @@ defined('MOODLE_INTERNAL') || die();
 /*
  * Edit menu form
  */
+
+global $USER;
 ?>
 <div align="center">
 <form method="get" action="<?php echo basename($_SERVER['SCRIPT_NAME']); ?>">

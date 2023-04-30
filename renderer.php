@@ -26,6 +26,34 @@ defined('MOODLE_INTERNAL') || die();
 
 class local_cms_renderer extends plugin_renderer_base {
 
+    public function render_index($context) {
+        global $OUTPUT, $USER, $COURSE;
+ 
+        $stradministration = get_string('administration');
+        $strcms = get_string('cms', 'local_cms');
+
+        $template = new Stdclass;
+
+        $template->strmanagepages = get_string('managepages', 'local_cms');
+        $template->strmanagemenus = get_string('managemenus', 'local_cms');
+
+        $template->heading = $OUTPUT->heading_with_help($strcms . ' '. $stradministration, 'cms', 'local_cms', 'cms');
+
+        if ( has_capability('local/cms:createmenu', $context, $USER->id) ) {
+            $template->cancreatemenu = true;
+            $template->menusurl = new moodle_url('/local/cms/menus.php', array('course' => $COURSE->id, 'sesskey' => sesskey()));
+            $template->managemenusicon = $OUTPUT->pix_icon('menus', $template->strmanagemenus, 'local_cms');
+        }
+
+        if (has_capability('local/cms:publishpage', $context, $USER->id) or has_capability('local/cms:createpage', $context, $USER->id) ) {
+            $template->canedit = true;
+            $template->pagesurl = new moodle_url('/local/cms/pages.php', array('course' => $COURSE->id, 'sesskey' => sesskey()));
+            $template->managepagesicon = $OUTPUT->pix_icon('pages', $template->strmanagepages, 'local_cms');
+        }
+
+        return $OUTPUT->render_from_template('local_cms/index', $template);
+    }
+
     /**
     * inserts dynamic content
     * @param object $pagedata 
@@ -122,7 +150,7 @@ class local_cms_renderer extends plugin_renderer_base {
      * @uses $USER
      */
     function actions($pagedata, $course, $context) {
-        global $USER, $OUTPUT, $DB;
+        global $USER, $OUTPUT, $DB, $CFG;
 
         if ( has_capability('local/cms:manageview', $context) ) {
             $stredit = get_string('edit');
@@ -142,7 +170,7 @@ class local_cms_renderer extends plugin_renderer_base {
             if (has_capability('local/cms:createpage', $context, $USER->id) && !empty($pagedata->id)) {
                 $menuid = $DB->get_field('local_cms_navi_data', 'naviid', array('pageid' => $pagedata->id));
                 $addurl = new moodle_url('/local/cms/pageadd.php', array('nid' => $menuid, 'sesskey' => sesskey(), 'parentid' => $pagedata->id, 'course' => $course->id));
-                $addicon = $OUTPUT->pix_icon('add','local_cms', $stradd);
+                $addicon = $OUTPUT->pix_icon('add', $stradd, 'local_cms');
                 $toolbar .= ' <a href="'.$addurl.'">'.$addicon.'</a>';
             }
 
@@ -165,7 +193,18 @@ class local_cms_renderer extends plugin_renderer_base {
             }
 
             if (has_capability('local/cms:editpage', $context)) {
-                $toolbar .= $OUTPUT->help_icon('editortricks', 'local_cms');
+                if (is_dir($CFG->dirroot.'/local/vflibs')) {
+                    include_once($CFG->dirroot.'/local/vflibs/vfdoclib.php');
+                    $helplink = local_vflibs_make_doc_url('local_cms');
+                    if ($helplink) {
+                        // Do we have the key for enhanced documentation ? 
+                        $toolbar .= '<a href="'.$helplink.'" target="_blank">'.$OUTPUT->pix_icon('help', '').'</a>';
+                    } else {
+                        $toolbar .= $OUTPUT->help_icon('editortricks', 'local_cms');
+                    }
+                } else {
+                    $toolbar .= $OUTPUT->help_icon('editortricks', 'local_cms');
+                }
             }
 
             if ( !empty($toolbar) ) {
@@ -202,11 +241,11 @@ class local_cms_renderer extends plugin_renderer_base {
 
         if ($course->newsitems) { // Print forums only when needed
             require_once($CFG->dirroot .'/mod/forum/lib.php');
-    
+
             if (! $newsforum = forum_get_course_forum($course->id, 'news')) {
                 print_error('Could not find or create a main news forum for the course');
             }
-    
+
             if (isset($USER->id)) {
                 $SESSION->fromdiscussion = $CFG->wwwroot;
                 if (forum_is_subscribed($USER->id, $newsforum->id)) {
@@ -382,7 +421,7 @@ class local_cms_renderer extends plugin_renderer_base {
 
                 $deleteurl = new moodle_url('/local/cms/menudelete.php', array('id' => $menu->id, 'sesskey' => sesskey(), 'course' => $courseid));
                 $dellink  = '<a href="'.$deleteurl.'">';
-                $dellink .= '<img src="'.$OUTPUT->pix_icon('t/delete', $deletepagestr).'</a>';
+                $dellink .= $OUTPUT->pix_icon('t/delete', $deletepagestr).'</a>';
 
                 $created  = userdate($menu->created, "%x %X");
                 $modified = userdate($menu->modified, "%x %X");

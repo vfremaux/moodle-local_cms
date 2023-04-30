@@ -70,7 +70,7 @@ if ($pageform->is_cancelled()) {
 
 if ($fromform = $pageform->get_data()) {
 
-    // Odd behaviour : Why do we loose that field ? 
+    // Odd behaviour : Why do we loose that field ?
     $fromform->parentid = $_REQUEST['parentid'];
 
     confirm_sesskey();
@@ -83,9 +83,9 @@ if ($fromform = $pageform->get_data()) {
         $newpage->modified = time();
         $newpage->lastuserid = $USER->id;
         $newpage->body = $fromform->body['text'];
-        $newpage->bodyformat = $fromform->body['format']; // fakes as not really recorded
+        $newpage->bodyformat = $fromform->body['format']; // Fakes as not really recorded.
 
-        if (!empty($fromform->publish) or !empty($fromform->pageisfp)) {
+        if (!empty($fromform->publish) || !empty($fromform->pageisfp)) {
             $newpage->publish = 1;
         } else {
             $newpage->publish = 0;
@@ -93,13 +93,13 @@ if ($fromform = $pageform->get_data()) {
 
         try {
             $newpage->id = $DB->insert_record('local_cms_pages', $newpage);
-        } catch(Exception $e) {
+        } catch (Exception $e) {
             print_error('errorcreatepage', 'local_cms');
         }
 
         // Pre process files.
         $body_draftid_editor = file_get_submitted_draft_itemid('body');
-        $fromform->body = file_save_draft_area_files($body_draftid_editor, $context->id, 'local_cms', 'body', $fromform->id, $pageform->editoroptions, $fromform->body['text']);
+        $fromform->body = file_save_draft_area_files($body_draftid_editor, $context->id, 'local_cms', 'body', $newpage->id, $pageform->editoroptions, $fromform->body['text']);
 
         $newpage->body = $fromform->body;
 
@@ -124,6 +124,10 @@ if ($fromform = $pageform->get_data()) {
             $fromform->showblocks = 0;
         }
 
+        if (empty($fromform->embedded) ) {
+            $fromform->embedded = 0;
+        }
+
         $fromform->isfp = 0;
         $fromform->sortorder = 2000;
         $fromform->pageid = $pageid;
@@ -141,7 +145,7 @@ if ($fromform = $pageform->get_data()) {
             print_error('errorpagemenulink', 'local_cms');
         }
 
-        if ( $pageid && $newid ) {
+        if ($pageid && $newid) {
             // Add entry to cmspage_history table.
             $history = new stdClass;
             $history->pageid = $fromform->pageid;
