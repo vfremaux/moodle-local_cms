@@ -60,7 +60,7 @@ class local_cms_renderer extends plugin_renderer_base {
     * @param object $course the course in context
     */
     function render_page($pagedata, $course) {
-        global $sections, $USER, $DB, $SESSION;
+        global $sections, $USER, $DB, $SESSION, $CFG, $SITE;
 
         // content marked as private should be shown with a special style to people with editing rights
         // and should not be shown to others
@@ -141,6 +141,14 @@ class local_cms_renderer extends plugin_renderer_base {
     
         $options = new stdClass;
         $options->noclean = true;
+
+        // Final macro replacements
+        $body = str_replace('%WWWROOT%', $CFG->wwwroot, $body);
+        $body = str_replace('%SITENAME%', $SITE->fullname, $body);
+        $body = str_replace('%SITESHORT%', $SITE->shortname, $body);
+        $body = str_replace('%USERFIRST%', $USER->firstname ?? '', $body);
+        $body = str_replace('%USERLAST%', $USER->lastname ?? '', $body);
+
         return format_text($body, FORMAT_HTML, $options);
     }
 

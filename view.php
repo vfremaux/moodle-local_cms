@@ -76,14 +76,14 @@ $switchrole = optional_param('switchrole',-1, PARAM_INT);
 if (!empty($pageid)) {
     // Explicit page id given.
     if ($pageid == 0) {
-        print_error('errorbadpage', 'local_cms');
+        throw new moodle_exception(get_string('errorbadpage', 'local_cms'));
     }
     if (!$pagedata = cms_get_page_data_from_id($pageid)) {
-        print_error('errorbadpage', 'local_cms');
+        throw new moodle_exception(get_string('errorbadpage', 'local_cms'));
     }
 
     if (!$course = $DB->get_record('course', array('id' => $pagedata->course))) {
-        print_error('coursemisconf');
+        throw new moodle_exception(get_string('coursemisconf'));
     }
 } else {
     if (empty($courseid)) {
@@ -92,11 +92,14 @@ if (!empty($pageid)) {
     if ($courseid > SITEID || !empty($pagename)) {
         $course = $DB->get_record('course', array('id' => $courseid));
         if (!$pagedata = cms_get_page_data($course->id, 0, $pagename)) {
-            print_error('errorbadpage', 'local_cms');
+            $e = new StdClass;
+            $e->courseid = $course->id;
+            $e->pagename = $pagename;
+            throw new moodle_exception(get_string('errorbadpage', 'local_cms', $e));
         }
     } else {
         if (!$pagedata = cms_get_page_data(0, 0, $pagename)) {
-            print_error('errorbadpage', 'local_cms');
+            throw new moodle_exception(get_string('errorbadpage', 'local_cms'));
         }
     }
     $pageid = $pagedata->id;
@@ -114,7 +117,7 @@ if (empty($pagedata)) {
             $args = explode("/", $relativepath);
             $pagename = clean_param($args[2], PARAM_FILE);
         } else {
-            print_error('errorbadpage', 'local_cms');
+            throw new moodle_exception(get_string('errorbadpage', 'local_cms'));
         }
         unset($args, $relativepath);
         $pagedata = cms_get_page_data(SITEID, 0, $pagename);

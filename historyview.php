@@ -38,7 +38,11 @@ if (!$course = $DB->get_record('course', array('id' => $courseid)) ) {
 // You need being enrolled in that course (or being superuser).
 require_login($course->id);
 
-$context = context_course::instance($courseid);
+if ($courseid == SITEID) {
+    $context = context_system::instance();
+} else {
+    $context = context_course::instance($courseid);
+}
 require_capability('local/cms:editpage', $context);
 
 // setup page.
@@ -58,7 +62,9 @@ echo $OUTPUT->header();
 if ( $pagedata = $DB->get_record('local_cms_pages_history', array('id' => $pageid)) ) {
     $options = new stdClass;
     $options->noclean = true;
-    echo format_text($pagedata->content, FORMAT_HTML, $options);
+    $content = file_rewrite_pluginfile_urls($pagedata->content,
+            'pluginfile.php', $context->id, 'local_cms', 'body', $pageid);
+    echo format_text($content, FORMAT_HTML, $options);
 }
 
 echo $OUTPUT->footer();

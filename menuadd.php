@@ -73,10 +73,15 @@ if ($menu = $menuform->get_data() ) {
     $menu->course = $courseid;
     $menu->created = time();
     $menu->modified = time();
-    $menu->intro = $menu->intro;
 
-    if (!$rs = $DB->insert_record('local_cms_navi', $menu)) {
-        print_error("Couldn't create new menu!");
+    $description = $menu->intro;
+    $menu->intro = $description['text'];
+    // $menu->introformat = $description['format']; // Not implented.
+
+    try {
+        $DB->insert_record('local_cms_navi', $menu);
+    } catch (Exception $ex) {
+        print_error("CMS Menu : Couldn't create new menu ! ");
     }
 
     $message = get_string('menuadded', 'local_cms');

@@ -45,7 +45,8 @@ class Edit_Menu_Form extends moodleform{
         $mform->addElement('text', 'name', get_string('title', 'local_cms'), array('size' => 45));
         $mform->setType('name', PARAM_CLEANHTML);
 
-        $mform->addElement('htmleditor', 'intro', get_string('intro', 'local_cms'), array('cols' => 60, 'rows' => 10));
+        $editoroptions = array('cols' => 60, 'rows' => 10);
+        $mform->addElement('editor', 'intro', get_string('intro', 'local_cms'), null, $editoroptions);
         $mform->setType('intro', PARAM_CLEANHTML);
 
         $yesnooptions[0] = get_string('no');

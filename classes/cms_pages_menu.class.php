@@ -236,7 +236,7 @@ class cms_pages_menu {
     function __hasSibling($parentid) {
 
         $parentid = intval($parentid);
-        if ( !empty($this->tmparray[$parentid]) ) {
+        if (!empty($this->tmparray[$parentid]) && count($this->tmparray[$parentid]) > 1) {
                     return true;
                 }
 

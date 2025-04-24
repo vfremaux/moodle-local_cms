@@ -18,7 +18,6 @@
  * popup window for reordering pages
  *
  * @package    local_cms
- * @category   local
  * @author     Moodle 1.9 Janne Mikkonen
  * @author     Moodle 2.x Valery Fremaux <valery.fremaux@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later

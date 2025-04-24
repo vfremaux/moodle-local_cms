@@ -16,8 +16,19 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+// settings default init
+if (is_dir($CFG->dirroot.'/local/adminsettings')) {
+    // Integration driven code 
+    require_once($CFG->dirroot.'/local/adminsettings/lib.php');
+    list($hasconfig, $hassiteconfig, $capability) = local_adminsettings_access();
+} else {
+    // Standard Moodle code
+    $capability = 'moodle/site:config';
+    $hasconfig = $hassiteconfig = has_capability($capability, context_system::instance());
+}
+
 if ($hassiteconfig) {
-    $settings = new admin_settingpage('local_cms', get_string('pluginname', 'local_cms'));
+    $settings = new admin_settingpage('localsettingcms', get_string('pluginname', 'local_cms'));
     $ADMIN->add('localplugins', $settings);
 
     $settings->add(new admin_setting_configtext('local_cms/virtual_path', get_string('virtualpath', 'local_cms'), get_string('virtualpath_desc', 'local_cms'), '/documentation'));

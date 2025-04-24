@@ -8,3 +8,7 @@
     opacity:0.5;
     -moz-opacity:0.5;
 }
+
+.cms-page-content {
+    padding: 30px;
+}

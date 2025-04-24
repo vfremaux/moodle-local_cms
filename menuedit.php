@@ -72,10 +72,16 @@ if ( $menu = $menuform->get_data() ) {
         $menu->requirelogin = 0;
     }
 
+    $description = $menu->intro;
+    $menu->intro = $description['text'];
+    // $menu->introformat = $description['format']; // Not implemented
+
     $menu->modified = time();
-    
-    if (! $DB->update_record('local_cms_navi', $menu) ) {
-        print_error("Couldn't update menu record!");
+
+    try {
+        $DB->update_record('local_cms_navi', $menu);
+    } catch (Exception $ex) {
+        print_error("CMS menu : Couldn't update menu record !");
     }
 
     $message = get_string('updatedmenu', 'local_cms');
