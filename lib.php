@@ -86,3 +86,12 @@ function local_cms_pluginfile($course, $cm, $context, $filearea, $args, $forcedo
     send_stored_file($file, 0, 0, $forcedownload);
 }
 
+/**
+ * Get icon mapping for font-awesome.
+ */
+function local_cms_get_fontawesome_icon_map() {
+    return [
+        'local_cms:edit' => 'fa-pen-to-square',
+    ];
+}
+

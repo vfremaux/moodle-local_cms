@@ -171,7 +171,7 @@ class local_cms_renderer extends plugin_renderer_base {
 
             if ( has_capability('local/cms:editpage', $context) ) {
                 $editurl = new moodle_url('/local/cms/pageupdate.php', array('id' => $pagedata->id, 'sesskey' => sesskey(), 'course' => $course->id));
-                $editicon = $OUTPUT->pix_icon('i/edit', $stredit);
+                $editicon = $OUTPUT->pix_icon('edit', $stredit, 'local_cms');
                 $toolbar = '<a href="'.$editurl.'">'.$editicon.'</a>';
             }
 
@@ -406,8 +406,8 @@ class local_cms_renderer extends plugin_renderer_base {
             $strintro    = get_string('intro','local_cms');
             $strcreated  = get_string('created','local_cms');
             $strmodified = get_string('modified');
-            $strrequirelogin = get_string('requirelogin','local_cms');
-            $strallowguest   = get_string('allowguest','local_cms');
+            $strrequirelogin = get_string('requirelogin', 'local_cms');
+            $strallowguest   = get_string('allowguest', 'local_cms');
             $imgrlogin = $OUTPUT->pix_icon('key', $strrequirelogin, 'local_cms');
             $imgallowguest = $OUTPUT->pix_icon('guest', $strallowguest, 'local_cms');
 
@@ -425,7 +425,7 @@ class local_cms_renderer extends plugin_renderer_base {
             foreach ($menus as $menu) {
                 $editurl = new moodle_url('/local/cms/menuedit.php', array('id' => $menu->id, 'sesskey' => sesskey(), 'course' => $courseid));
                 $editlink  = '<a href="'.$editurl.'">';
-                $editlink .= $OUTPUT->pix_icon('t/edit', $editpagestr).'</a>';
+                $editlink .= $OUTPUT->pix_icon('edit', $editpagestr, 'local_cms').'</a>';
 
                 $deleteurl = new moodle_url('/local/cms/menudelete.php', array('id' => $menu->id, 'sesskey' => sesskey(), 'course' => $courseid));
                 $dellink  = '<a href="'.$deleteurl.'">';
