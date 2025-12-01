@@ -76,38 +76,6 @@ class local_cms_page_viewed extends \core\event\base {
     }
 
     /**
-     * Return legacy event name.
-     *
-     * @return string legacy event name
-     */
-    public static function get_legacy_eventname() {
-        return 'view';
-    }
-
-    /**
-     * Replace add_to_log() statement.Do this only for the case when anonymous mode is off,
-     * since this is what was happening before.
-     *
-     * @return array of parameters to be passed to legacy add_to_log() function.
-     */
-    protected function get_legacy_logdata() {
-        if ($this->anonymous) {
-            return null;
-        } else {
-            return parent::get_legacy_logdata();
-        }
-    }
-
-    /**
-     * Return legacy event data.
-     *
-     * @return \stdClass
-     */
-    protected function get_legacy_eventdata() {
-        return $this->get_record_snapshot('local_cms_pages', $this->objectid);
-    }
-
-    /**
      * Custom validations.
      *
      * @throws \coding_exception in case of any problems.
